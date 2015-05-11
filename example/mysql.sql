@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS user;
+
+CREATE TABLE user (
+    `user` INTEGER unsigned NOT NULL,
+    `name` VARCHAR(255) NOT NULL UNIQUE,
+    PRIMARY KEY (`user`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
