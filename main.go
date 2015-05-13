@@ -31,8 +31,10 @@ func Run() {
 
 	var dialect Dialect
 	switch driverName {
+	case "mysql":
+		dialect = MysqlDialect{}
 	default:
-		log.Fatalf("undefined driver name: %s", driver)
+		log.Fatalf("undefined driver name: %s", driverName)
 	}
 
 	path, err := filepath.Abs(schemadir)
@@ -79,15 +81,13 @@ func Run() {
 		log.Fatal("invalid outpath error:", err)
 	}
 
-	tableMaps := []*TableMap{}
 	for tableName, specs := range tables {
 		for _, spec := range specs {
 			if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 				if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-					fields := structType.Fields.List
-					tableMap = NewTableMap(tableName, structType)
+					tableMap := NewTableMap(tableName, structType)
 					if tableMap != nil {
-						dialect.WriteDDL(file)
+						tableMap.WriteDDL(file, dialect)
 					}
 				}
 			}

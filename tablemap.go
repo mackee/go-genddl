@@ -2,6 +2,7 @@ package genddl
 
 import (
 	"go/ast"
+	"io"
 	"strings"
 )
 
@@ -15,22 +16,56 @@ func NewTableMap(name string, structType *ast.StructType) *TableMap {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
-	for _, field := range structType.Fields {
-		tableMap.addColumn(field)
-		tableMap.addIndex(field)
+	for _, field := range structType.Fields.List {
+		tableMap.addColumnOrIndex(field)
 	}
 
 	return tableMap
 }
 
-func (tm *tableMap) addColumnOrIndex(field *ast.Field) {
+func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
+	tableName := dialect.QuoteField(strings.TrimSpace(tm.Name))
+
+	_, err := io.WriteString(w, "DROP TABLE IF EXISTS "+tableName+";\n\n")
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(w, "CREATE TABLE "+tableName+" (\n")
+	if err != nil {
+		return err
+	}
+
+	for i, cm := range tm.Columns {
+		columnName := dialect.QuoteField(cm.Name)
+		columnType := dialect.ToSqlType(cm)
+
+		comma := ",\n"
+		if i == len(tm.Columns)-1 {
+			comma = "\n"
+		}
+
+		_, err = io.WriteString(w, "    "+columnName+" "+columnType+comma)
+		if err != nil {
+			return err
+		}
+	}
+
+	suffix := dialect.CreateTableSuffix()
+	_, err = io.WriteString(w, ")"+suffix+";\n")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (tm *TableMap) addColumnOrIndex(field *ast.Field) {
 	if field.Tag == nil {
 		return
 	}
 	tagMap := tm.parseTag(field.Tag.Value)
 
-	tm.addColumn(columnMap, tagMap)
-	tm.addIndex(columnMap, tagMap)
+	tm.addColumn(field, tagMap)
+	tm.addIndex(field, tagMap)
 }
 
 type ColumnMap struct {
@@ -39,8 +74,8 @@ type ColumnMap struct {
 	TagMap map[string]string
 }
 
-func (tm *tableMap) addColumn(field *ast.Field, tagMap map[string]string) {
-	columnMap = new(ColumnMap)
+func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string) {
+	columnMap := new(ColumnMap)
 
 	if name, ok := tagMap["db"]; ok {
 		columnMap.Name = name
@@ -48,7 +83,7 @@ func (tm *tableMap) addColumn(field *ast.Field, tagMap map[string]string) {
 		return
 	}
 
-	if t, ok = field.Type.(*ast.Ident); ok {
+	if t, ok := field.Type.(*ast.Ident); ok {
 		columnMap.Type = t
 	} else {
 		return
@@ -60,14 +95,15 @@ func (tm *tableMap) addColumn(field *ast.Field, tagMap map[string]string) {
 }
 
 type IndexMap struct {
-	IndexName  string
+	Name       string
 	Columns    []string
 	Unique     bool
 	PrimaryKey bool
+	TagMap     map[string]string
 }
 
-func (tm *tableMap) addIndex(field *ast.Field, tagMap map[string]string) {
-	indexMap = new(indexMap)
+func (tm *TableMap) addIndex(field *ast.Field, tagMap map[string]string) {
+	indexMap := new(IndexMap)
 
 	if name, ok := tagMap["index"]; ok {
 		indexMap.Name = name
@@ -77,12 +113,6 @@ func (tm *tableMap) addIndex(field *ast.Field, tagMap map[string]string) {
 	} else if name, ok := tagMap["primarykey"]; ok {
 		indexMap.Name = name
 		indexMap.PrimaryKey = true
-	} else {
-		return
-	}
-
-	if t, ok = field.Type.(*ast.Ident); ok {
-		indexMap.Type = t
 	} else {
 		return
 	}
