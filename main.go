@@ -39,6 +39,7 @@ type Driver interface {
 	Null() string
 	AutoIncrement() string
 	Unique() string
+	DefaultValue(map[string]string) string
 }
 
 func Run() {
@@ -197,6 +198,10 @@ func buildColumnDef(driver Driver, typeName string, tagMap map[string]string) ([
 		schemaDef = append(schemaDef, driver.AutoIncrement())
 	} else if _, ok := tagMap["unique"]; ok {
 		schemaDef = append(schemaDef, driver.Unique())
+	}
+
+	if _, ok := tagMap["default"]; ok {
+		schemaDef = append(schemaDef, driver.DefaultValue(tagMap))
 	}
 
 	return schemaDef, nil

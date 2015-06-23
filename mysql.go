@@ -59,3 +59,18 @@ func (m Mysql) AutoIncrement() string {
 func (m Mysql) Unique() string {
 	return "UNIQUE"
 }
+
+func (m Mysql) DefaultValue(opts map[string]string) string {
+
+	defaultValue := ""
+
+	if v, ok := opts["default"]; ok {
+		defaultValue = "'" + v + "'"
+	}
+
+	if defaultValue == "" {
+		return defaultValue
+	}
+
+	return "DEFAULT " + defaultValue + ""
+}
