@@ -3,6 +3,7 @@ package genddl
 import (
 	"go/ast"
 	"io"
+	"reflect"
 	"strings"
 )
 
@@ -123,17 +124,20 @@ func (tm *TableMap) addIndex(field *ast.Field, tagMap map[string]string) {
 }
 
 func (tm *TableMap) parseTag(v string) map[string]string {
-	tags := strings.Split(v, ",")
+	st := reflect.StructTag(strings.Replace(v, "`", "", 2))
+	dbTag := st.Get("db")
+	tags := strings.Split(dbTag, ",")
 	tagMap := map[string]string{}
-	for _, tag := range tags {
-		kv := strings.Split(tag, ":")
-		key := strings.Trim(kv[0], "` ")
+
+	tagMap["db"] = tags[0]
+	for _, tag := range tags[1:] {
+		kv := strings.Split(tag, "=")
+		key := strings.TrimSpace(kv[0])
 		if len(kv) == 1 {
 			tagMap[key] = ""
 			continue
 		}
-		value := strings.Trim(kv[1], "`")
-		tagMap[key] = strings.Replace(value, `"`, "", -1)
+		tagMap[key] = strings.TrimSpace(kv[1])
 	}
 
 	return tagMap
