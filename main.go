@@ -21,9 +21,11 @@ type Table struct {
 	PrimaryKey string
 }
 
-func Run() {
+func Run(from string) {
+	fromdir := filepath.Dir(from)
+
 	var schemadir, outpath, driverName string
-	flag.StringVar(&schemadir, "schemadir", "", "schema declaretion directory")
+	flag.StringVar(&schemadir, "schemadir", fromdir, "schema declaretion directory")
 	flag.StringVar(&outpath, "outpath", "", "schema target path")
 	flag.StringVar(&driverName, "driver", "mysql", "target driver")
 

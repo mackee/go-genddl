@@ -1,6 +1,6 @@
 package example
 
-//go:generate go run ../cmd/main.go -schemadir=./ -outpath=./mysql.sql
+//go:generate go run ../cmd/genddl/main.go -outpath=./mysql.sql
 
 //+table: user
 type User struct {
