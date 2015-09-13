@@ -35,6 +35,8 @@ func Run(from string) {
 	switch driverName {
 	case "mysql":
 		dialect = MysqlDialect{}
+	case "sqlite3":
+		dialect = Sqlite3Dialect{}
 	default:
 		log.Fatalf("undefined driver name: %s", driverName)
 	}

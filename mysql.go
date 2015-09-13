@@ -1,61 +1,66 @@
 package genddl
 
-var (
-	MysqlVarcharDefaultSize = "191"
+const (
+	MYSQL_DEFAULT_VARCHAR_SIZE = "191"
 )
 
-type Mysql struct {
+type MysqlDialect struct {
 }
 
-func (m Mysql) Template() string {
-	return `DROP TABLE IF EXISTS {{ .Name }};
+func (m MysqlDialect) DriverName() string { return "mysql" }
 
-CREATE TABLE {{ .Name }} (
-    {{ range .Fields }}{{ .ColumnDef }},
-    {{ end }}PRIMARY KEY ({{ .PrimaryKey }})
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-`
+func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
+	column := ""
 
-}
-
-func (m Mysql) TypeText() string {
-	return "TEXT"
-}
-func (m Mysql) TypeString(opts map[string]string) string {
-	size := MysqlVarcharDefaultSize
-	if v, ok := opts["size"]; ok {
-		size = v
+	switch col.Type.Name {
+	case "bool":
+		column = "BOOLEAN"
+	case "int", "int16", "int32":
+		column = "INTEGER"
+	case "uint16", "uint32":
+		column = "INTEGER unsigned"
+	case "int64":
+		column = "BIGINT"
+	case "uint64":
+		column = "BIGINT unsigned"
+	case "float64":
+		column = "DOUBLE"
+	case "float32":
+		column = "FLOAT"
+	case "string":
+		size := MYSQL_DEFAULT_VARCHAR_SIZE
+		if v, ok := col.TagMap["size"]; ok {
+			size = v
+		}
+		column = "VARCHAR(" + size + ")"
 	}
 
-	return "VARCHAR(" + size + ")"
-}
-func (m Mysql) TypeUInt32() string {
-	return "INTEGER unsigned"
-}
-func (m Mysql) TypeInt32() string {
-	return "INTEGER"
-}
-func (m Mysql) TypeUInt64() string {
-	return "BIGINT unsigned"
-}
-func (m Mysql) TypeInt64() string {
-	return "BIGINT"
+	if _, ok := col.TagMap["null"]; ok {
+		column += " NULL"
+	} else {
+		column += " NOT NULL"
+	}
+
+	if v, ok := col.TagMap["default"]; ok {
+		column += " DEFAULT" + v
+	}
+	if _, ok := col.TagMap["unique"]; ok {
+		column += " UNIQUE"
+	}
+	if _, ok := col.TagMap["primarykey"]; ok {
+		column += " PRIMARY KEY"
+	}
+	if _, ok := col.TagMap["autoincrement"]; ok {
+		column += " AUTO_INCREMENT"
+	}
+
+	return column
 }
 
-func (m Mysql) TypeDateTime() string {
-	return "DATETIME"
+func (m MysqlDialect) CreateTableSuffix() string {
+	return "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 }
 
-func (m Mysql) NotNull() string {
-	return "NOT NULL"
-}
-func (m Mysql) Null() string {
-	return "NULL"
-}
-
-func (m Mysql) AutoIncrement() string {
-	return "AutoIncrement"
-}
-func (m Mysql) Unique() string {
-	return "UNIQUE"
+func (m MysqlDialect) QuoteField(field string) string {
+	return "`" + field + "`"
 }
