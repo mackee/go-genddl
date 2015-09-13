@@ -5,6 +5,6 @@ package example
 
 //+table: user
 type User struct {
-	Id   uint32 `db:"id,primarykey"`
+	Id   uint32 `db:"id,primarykey,autoincrement"`
 	Name string `db:"name,unique,size=255"`
 }
