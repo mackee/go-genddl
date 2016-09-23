@@ -2,5 +2,9 @@ DROP TABLE IF EXISTS `user`;
 
 CREATE TABLE `user` (
     `id` INTEGER unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `name` VARCHAR(255) NOT NULL UNIQUE
+    `name` VARCHAR(255) NOT NULL UNIQUE,
+    `age` BIGINT NULL,
+    `message` VARCHAR(191) NULL,
+    `created_at` DATETIME NOT NULL,
+    `updated_at` DATETIME NULL
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

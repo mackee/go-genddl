@@ -1,5 +1,7 @@
 package genddl
 
+import "strings"
+
 type Sqlite3Dialect struct {
 }
 
@@ -8,16 +10,16 @@ func (m Sqlite3Dialect) DriverName() string { return "sqlite3" }
 func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 	column := ""
 
-	switch col.Type.Name {
-	case "bool", "int", "int16", "int32", "int64", "uint16", "uint32", "uint64":
+	switch col.TypeName {
+	case "bool", "int", "int16", "int32", "int64", "uint16", "uint32", "uint64", "sql.NullBool", "sql.NullInt64":
 		column = "INTEGER"
-	case "float32", "float64":
+	case "float32", "float64", "sql.NullFloat64":
 		column = "REAL"
-	case "string":
+	case "string", "sql.NullString", "time.Time", "mysql.NullTime":
 		column = "TEXT"
 	}
 
-	if _, ok := col.TagMap["null"]; ok {
+	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {
 		column += " NULL"
 	} else {
 		column += " NOT NULL"

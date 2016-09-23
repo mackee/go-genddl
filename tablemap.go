@@ -5,6 +5,8 @@ import (
 	"io"
 	"reflect"
 	"strings"
+
+	"github.com/favclip/genbase"
 )
 
 type TableMap struct {
@@ -70,9 +72,9 @@ func (tm *TableMap) addColumnOrIndex(field *ast.Field) {
 }
 
 type ColumnMap struct {
-	Name   string
-	Type   *ast.Ident
-	TagMap map[string]string
+	Name     string
+	TypeName string
+	TagMap   map[string]string
 }
 
 func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string) {
@@ -84,11 +86,11 @@ func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string) {
 		return
 	}
 
-	if t, ok := field.Type.(*ast.Ident); ok {
-		columnMap.Type = t
-	} else {
+	typeName, err := genbase.ExprToTypeName(field.Type)
+	if err != nil {
 		return
 	}
+	columnMap.TypeName = typeName
 
 	columnMap.TagMap = tagMap
 
