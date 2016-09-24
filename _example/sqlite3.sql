@@ -5,6 +5,6 @@ CREATE TABLE "user" (
     "name" TEXT NOT NULL UNIQUE,
     "age" INTEGER NULL,
     "message" TEXT NULL,
-    "created_at" TEXT NOT NULL,
-    "updated_at" TEXT NULL
+    "created_at" DATETIME NOT NULL,
+    "updated_at" DATETIME NULL
 );
