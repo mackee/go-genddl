@@ -47,7 +47,7 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 	}
 
 	if v, ok := col.TagMap["default"]; ok {
-		column += " DEFAULT" + v
+		column += " DEFAULT " + v
 	}
 	if _, ok := col.TagMap["unique"]; ok {
 		column += " UNIQUE"
