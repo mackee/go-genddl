@@ -135,9 +135,15 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 		if funcDecl.Recv.NumFields() < 0 {
 			continue
 		}
+		if funcDecl.Recv == nil || len(funcDecl.Recv.List) == 0 {
+			continue
+		}
 		recv := funcDecl.Recv.List[0]
 		ident, ok := recv.Type.(*ast.Ident)
 		if !ok {
+			continue
+		}
+		if ident.Obj == nil || ident.Obj.Decl == nil {
 			continue
 		}
 		ts, ok := ident.Obj.Decl.(*ast.TypeSpec)
