@@ -89,7 +89,7 @@ func (m MysqlDialect) ForeignKey(option index.ForeignKeyOption) string {
 	case index.ForeignKeyUpdateRestrict:
 		return "ON UPDATE SET RISTRICT"
 	case index.ForeignKeyUpdateCascade:
-		return "ON UPDATE SET CASCADE"
+		return "ON UPDATE CASCADE"
 	case index.ForeignKeyUpdateSetNull:
 		return "ON UPDATE SET SET NULL"
 	case index.ForeignKeyUpdateSetDefault:

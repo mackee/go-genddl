@@ -9,5 +9,5 @@ CREATE TABLE `product` (
     PRIMARY KEY (`id`, `created_at`),
     UNIQUE (`user_id`, `type`),
     INDEX (`user_id`, `created_at`),
-    FOREIGN (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE SET CASCADE
+    FOREIGN KEY (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

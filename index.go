@@ -49,7 +49,7 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 	case indexComplex:
 		bs.WriteString("INDEX (")
 	case indexForeign:
-		bs.WriteString("FOREIGN (")
+		bs.WriteString("FOREIGN KEY (")
 	}
 	columns := []string{}
 	for _, column := range si.Column {
