@@ -12,7 +12,7 @@ import (
 
 //+table: user
 type User struct {
-	Id        uint32         `db:"id,primarykey,autoincrement"`
+	ID        uint32         `db:"id,primarykey,autoincrement"`
 	Name      string         `db:"name,unique,size=255"`
 	Age       sql.NullInt64  `db:"age"`
 	Message   sql.NullString `db:"message"`

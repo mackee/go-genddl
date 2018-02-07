@@ -1,6 +1,10 @@
 package genddl
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/mackee/go-genddl/index"
+)
 
 const (
 	MYSQL_DEFAULT_VARCHAR_SIZE = "191"
@@ -68,4 +72,30 @@ func (m MysqlDialect) CreateTableSuffix() string {
 
 func (m MysqlDialect) QuoteField(field string) string {
 	return "`" + field + "`"
+}
+
+func (m MysqlDialect) ForeignKey(option index.ForeignKeyOption) string {
+	switch option {
+	case index.ForeignKeyDeleteRestrict:
+		return "ON DELETE RISTRICT"
+	case index.ForeignKeyDeleteCascade:
+		return "ON DELETE CASCADE"
+	case index.ForeignKeyDeleteSetNull:
+		return "ON DELETE SET NULL"
+	case index.ForeignKeyDeleteSetDefault:
+		return "ON DELETE SET DEFAULT"
+	case index.ForeignKeyDeleteNoAction:
+		return "ON DELETE SET NO ACTION"
+	case index.ForeignKeyUpdateRestrict:
+		return "ON UPDATE SET RISTRICT"
+	case index.ForeignKeyUpdateCascade:
+		return "ON UPDATE SET CASCADE"
+	case index.ForeignKeyUpdateSetNull:
+		return "ON UPDATE SET SET NULL"
+	case index.ForeignKeyUpdateSetDefault:
+		return "ON UPDATE SET SET DEFAULT"
+	case index.ForeignKeyUpdateNoAction:
+		return "ON UPDATE SET NO ACTION"
+	}
+	return ""
 }

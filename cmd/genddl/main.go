@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/mackee/genddl"
+	"github.com/mackee/go-genddl"
 )
 
 func main() {
