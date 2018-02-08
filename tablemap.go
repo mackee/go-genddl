@@ -247,7 +247,7 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 
 		comma := ",\n"
 		if i == len(tm.Columns)-1 {
-			comma = ""
+			comma = "\n"
 		}
 
 		_, err = io.WriteString(w, "    "+columnName+" "+columnType+comma)
@@ -255,18 +255,40 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 			return err
 		}
 	}
+
 	for _, sf := range tm.Indexes {
-		io.WriteString(w, ",\n")
+		if sf.IsOuterOfCreateTable() {
+			continue
+		}
 		str := sf.Index(dialect, tm.Tables)
-		io.WriteString(w, str)
+		_, err := io.WriteString(w, str+";\n")
+		if err != nil {
+			return err
+		}
 	}
-	io.WriteString(w, "\n")
 
 	suffix := dialect.CreateTableSuffix()
-	_, err = io.WriteString(w, ")"+suffix+";\n")
+	_, err = io.WriteString(w, ") "+suffix+";\n")
 	if err != nil {
 		return err
 	}
+
+	for _, sf := range tm.Indexes {
+		if !sf.IsOuterOfCreateTable() {
+			continue
+		}
+		str := sf.Index(dialect, tm.Tables)
+		_, err := io.WriteString(w, str+";\n")
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = io.WriteString(w, "\n")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

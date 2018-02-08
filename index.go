@@ -2,6 +2,8 @@ package genddl
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"go/ast"
 	"log"
@@ -15,6 +17,7 @@ import (
 const (
 	indexFuncName        = "_schemaIndex"
 	indexReturnSliceType = "Definition"
+	indexNameMaxLength   = 32
 )
 
 type indexType int
@@ -27,6 +30,7 @@ const (
 )
 
 type indexer interface {
+	IsOuterOfCreateTable() bool
 	Index(dialect Dialect, tables map[*ast.StructType]string) string
 }
 
@@ -38,18 +42,25 @@ type indexIdent struct {
 	ForeignKeyOptions []index.ForeignKeyOption
 }
 
+func (si indexIdent) IsOuterOfCreateTable() bool {
+	if si.Type == indexComplex {
+		return true
+	}
+	return false
+}
+
 func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) string {
 	bs := &bytes.Buffer{}
-	bs.WriteString("    ")
 	switch si.Type {
 	case indexUnique:
-		bs.WriteString("UNIQUE (")
+		bs.WriteString("    UNIQUE (")
 	case indexPrimaryKey:
-		bs.WriteString("PRIMARY KEY (")
+		bs.WriteString("    PRIMARY KEY (")
 	case indexComplex:
-		bs.WriteString("INDEX (")
+		tableName := tables[si.Struct]
+		fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), tableName)
 	case indexForeign:
-		bs.WriteString("FOREIGN KEY (")
+		bs.WriteString("    FOREIGN KEY (")
 	}
 	columns := []string{}
 	for _, column := range si.Column {
@@ -86,7 +97,28 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 	return bs.String()
 }
 
+func (si indexIdent) Name() string {
+	var columnNames []string
+	for _, column := range si.Column {
+		columnNames = append(columnNames, column.ColumnName())
+	}
+	return strings.Join(columnNames, "_")
+}
+
+func joinAndStripName(s string) string {
+	if len(s) <= indexNameMaxLength {
+		return s
+	}
+	hs := sha1.Sum([]byte(s))
+	he := hex.EncodeToString(hs[:])
+	return s[:indexNameMaxLength-8] + he[:8]
+}
+
 type rawIndex string
+
+func (rs rawIndex) IsOuterOfCreateTable() bool {
+	return false
+}
 
 func (rs rawIndex) Index(dialect Dialect, tables map[*ast.StructType]string) string {
 	return "    " + string(rs)
@@ -94,6 +126,7 @@ func (rs rawIndex) Index(dialect Dialect, tables map[*ast.StructType]string) str
 
 type indexColumn interface {
 	Column(dialect Dialect, me *ast.StructType, tables map[*ast.StructType]string) (string, error)
+	ColumnName() string
 }
 
 type unresolvedIndexColumn struct {
@@ -102,7 +135,7 @@ type unresolvedIndexColumn struct {
 	Field      *ast.Field
 }
 
-func (c unresolvedIndexColumn) bareColumn(dialect Dialect) string {
+func (c unresolvedIndexColumn) ColumnName() string {
 	field := c.Field
 
 	tv, err := strconv.Unquote(field.Tag.Value)
@@ -112,7 +145,11 @@ func (c unresolvedIndexColumn) bareColumn(dialect Dialect) string {
 	tag := reflect.StructTag(tv)
 	info := strings.SplitN(tag.Get("db"), ",", 2)
 	columnName := info[0]
-	return dialect.QuoteField(columnName)
+	return columnName
+}
+
+func (c unresolvedIndexColumn) bareColumn(dialect Dialect) string {
+	return dialect.QuoteField(c.ColumnName())
 }
 
 func (c unresolvedIndexColumn) Column(dialect Dialect, me *ast.StructType, tables map[*ast.StructType]string) (string, error) {

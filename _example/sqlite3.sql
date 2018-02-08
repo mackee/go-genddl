@@ -7,12 +7,13 @@ CREATE TABLE "product" (
     "name" TEXT NOT NULL,
     "type" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
-    "created_at" DATETIME NOT NULL,
-    PRIMARY KEY ("id", "created_at"),
-    UNIQUE ("user_id", "type"),
-    INDEX ("user_id", "created_at"),
-    FOREIGN KEY ("user_id") REFERENCES user("id") ON DELETE CASCADE ON UPDATE SET CASCADE
-);
+    "created_at" DATETIME NOT NULL
+    PRIMARY KEY ("id", "created_at");
+    UNIQUE ("user_id", "type");
+    FOREIGN KEY ("user_id") REFERENCES user("id") ON DELETE CASCADE ON UPDATE SET CASCADE;
+) ;
+CREATE INDEX product_user_id_created_at ON product ("user_id", "created_at");
+
 
 DROP TABLE IF EXISTS "user";
 
@@ -23,4 +24,5 @@ CREATE TABLE "user" (
     "message" TEXT NULL,
     "created_at" DATETIME NOT NULL,
     "updated_at" DATETIME NULL
-);
+) ;
+
