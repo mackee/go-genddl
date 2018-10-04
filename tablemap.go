@@ -241,14 +241,16 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		return err
 	}
 
-	for i, cm := range tm.Columns {
-		columnName := dialect.QuoteField(cm.Name)
-		columnType := dialect.ToSqlType(cm)
-
-		comma := ",\n"
-		if i == len(tm.Columns)-1 {
+	comma := ",\n"
+	remainLines := len(tm.Columns) + len(tm.Indexes)
+	for _, cm := range tm.Columns {
+		remainLines--
+		if remainLines == 0 {
 			comma = "\n"
 		}
+
+		columnName := dialect.QuoteField(cm.Name)
+		columnType := dialect.ToSqlType(cm)
 
 		_, err = io.WriteString(w, "    "+columnName+" "+columnType+comma)
 		if err != nil {
@@ -257,11 +259,15 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 	}
 
 	for _, sf := range tm.Indexes {
+		remainLines--
+		if remainLines == 0 {
+			comma = "\n"
+		}
 		if sf.IsOuterOfCreateTable() {
 			continue
 		}
 		str := sf.Index(dialect, tm.Tables)
-		_, err := io.WriteString(w, str+";\n")
+		_, err := io.WriteString(w, str+comma)
 		if err != nil {
 			return err
 		}
