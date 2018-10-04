@@ -241,8 +241,17 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		return err
 	}
 
+	innerIndexes := make([]indexer, 0, len(tm.Indexes))
+	outerIndexes := make([]indexer, 0, len(tm.Indexes)/2)
+	for _, index := range tm.Indexes {
+		if index.IsOuterOfCreateTable() {
+			outerIndexes = append(outerIndexes, index)
+		} else {
+			innerIndexes = append(innerIndexes, index)
+		}
+	}
 	comma := ",\n"
-	remainLines := len(tm.Columns) + len(tm.Indexes)
+	remainLines := len(tm.Columns) + len(innerIndexes)
 	for _, cm := range tm.Columns {
 		remainLines--
 		if remainLines == 0 {
@@ -258,13 +267,10 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		}
 	}
 
-	for _, sf := range tm.Indexes {
+	for _, sf := range innerIndexes {
 		remainLines--
 		if remainLines == 0 {
 			comma = "\n"
-		}
-		if sf.IsOuterOfCreateTable() {
-			continue
 		}
 		str := sf.Index(dialect, tm.Tables)
 		_, err := io.WriteString(w, str+comma)
@@ -279,10 +285,7 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		return err
 	}
 
-	for _, sf := range tm.Indexes {
-		if !sf.IsOuterOfCreateTable() {
-			continue
-		}
+	for _, sf := range outerIndexes {
 		str := sf.Index(dialect, tm.Tables)
 		_, err := io.WriteString(w, str+";\n")
 		if err != nil {
