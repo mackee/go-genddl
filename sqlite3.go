@@ -21,7 +21,7 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 		column = "REAL"
 	case "string", "sql.NullString":
 		column = "TEXT"
-	case "time.Time", "mysql.NullTime":
+	case "time.Time", "mysql.NullTime", "sql.NullTime":
 		column = "DATETIME"
 	}
 

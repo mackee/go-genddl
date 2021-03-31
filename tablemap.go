@@ -318,12 +318,13 @@ type ColumnMap struct {
 }
 
 var supportedTypes = map[string]struct{}{
-	"time.Time":       {},
-	"sql.NullBool":    {},
-	"sql.NullInt64":   {},
-	"sql.NullFloat64": {},
-	"sql.NullString":  {},
-	"mysql.NullTime":  {},
+	"time.Time":                               {},
+	"database/sql.NullBool":                   {},
+	"database/sql.NullInt64":                  {},
+	"database/sql.NullFloat64":                {},
+	"database/sql.NullString":                 {},
+	"database/sql.NullTime":                   {},
+	"github.com/go-sql-driver/mysql.NullTime": {},
 }
 
 func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *types.Info) {
@@ -338,7 +339,8 @@ func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *ty
 	t := ti.TypeOf(field.Type)
 	for {
 		if _, ok := supportedTypes[t.String()]; ok {
-			typeName = t.String()
+			nt := t.(*types.Named)
+			typeName = strings.Join([]string{nt.Obj().Pkg().Name(), nt.Obj().Name()}, ".")
 			break
 		}
 		if ta, ok := t.(*types.Named); ok {

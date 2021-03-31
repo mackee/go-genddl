@@ -1,6 +1,7 @@
 package example
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/mackee/go-genddl/index"
@@ -8,11 +9,12 @@ import (
 
 //+table: product
 type Product struct {
-	ID        uint32    `db:"id,autoincrement"`
-	Name      string    `db:"name"`
-	Type      uint32    `db:"type"`
-	UserID    uint32    `db:"user_id"`
-	CreatedAt time.Time `db:"created_at"`
+	ID        uint32       `db:"id,autoincrement"`
+	Name      string       `db:"name"`
+	Type      uint32       `db:"type"`
+	UserID    uint32       `db:"user_id"`
+	CreatedAt time.Time    `db:"created_at"`
+	UpdatedAt sql.NullTime `db:"updated_at"`
 }
 
 func (s Product) _schemaIndex(methods index.Methods) []index.Definition {
