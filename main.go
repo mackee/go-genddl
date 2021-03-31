@@ -2,14 +2,16 @@ package genddl
 
 import (
 	"flag"
+	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
+	"go/types"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 type Field struct {
@@ -42,9 +44,9 @@ func Run(from string) {
 		log.Fatalf("undefined driver name: %s", driverName)
 	}
 
-	tables, funcMap, err := retrieveTables(schemadir)
+	tables, funcMap, ti, err := retrieveTables(schemadir)
 	if err != nil {
-		log.Fatal("parse and retrieve table error: %s", err)
+		log.Fatalf("parse and retrieve table error: %s", err)
 	}
 
 	file, err := os.Create(outpath)
@@ -62,7 +64,7 @@ func Run(from string) {
 	for _, tableName := range tableNames {
 		st := tables[tableName]
 		funcs := funcMap[st]
-		tableMap := NewTableMap(tableName, st, funcs, tablesMap)
+		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti)
 		if tableMap != nil {
 			file.WriteString("\n")
 			tableMap.WriteDDL(file, dialect)
@@ -73,27 +75,29 @@ func Run(from string) {
 
 var typeNameStructMap = map[string]*ast.StructType{}
 
-func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.StructType][]*ast.FuncDecl, error) {
+func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.StructType][]*ast.FuncDecl, *types.Info, error) {
 	path, err := filepath.Abs(schemadir)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(
-		fset,
-		path,
-		func(finfo os.FileInfo) bool { return true },
-		parser.ParseComments,
-	)
+	conf := &packages.Config{
+		Mode: packages.NeedCompiledGoFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+	}
+	pkgs, err := packages.Load(conf, path)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("retrieveTables: fail to parse from dir: dir=%s, error=%w", schemadir, err)
+	}
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	var decls []ast.Decl
+	var ti *types.Info
 	for _, pkg := range pkgs {
-		for _, file := range pkg.Files {
+		ti = pkg.TypesInfo
+		for _, file := range pkg.Syntax {
 			decls = append(decls, file.Decls...)
 		}
 	}
@@ -110,23 +114,25 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 				continue
 			}
 
-			comment := genDecl.Doc.List[0]
-			if strings.HasPrefix(comment.Text, "//+table:") {
-				tableName := strings.TrimPrefix(comment.Text, "//+table:")
-				tableName = strings.TrimSpace(tableName)
-				spec := genDecl.Specs[0]
-				ts, ok := spec.(*ast.TypeSpec)
-				if !ok {
-					continue
-				}
-				st, ok := ts.Type.(*ast.StructType)
-				if !ok {
-					continue
-				}
+			for _, comment := range genDecl.Doc.List {
+				if strings.HasPrefix(comment.Text, "//+table:") {
+					tableName := strings.TrimPrefix(comment.Text, "//+table:")
+					tableName = strings.TrimSpace(tableName)
+					spec := genDecl.Specs[0]
+					ts, ok := spec.(*ast.TypeSpec)
+					if !ok {
+						continue
+					}
+					st, ok := ts.Type.(*ast.StructType)
+					if !ok {
+						continue
+					}
 
-				tables[tableName] = st
-				funcMap[st] = make([]*ast.FuncDecl, 0)
-				typeNameStructMap[ts.Name.Name] = st
+					tables[tableName] = st
+					funcMap[st] = make([]*ast.FuncDecl, 0)
+					typeNameStructMap[ts.Name.Name] = st
+					break
+				}
 			}
 		}
 	}
@@ -159,5 +165,5 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 		}
 	}
 
-	return tables, funcMap, nil
+	return tables, funcMap, ti, nil
 }

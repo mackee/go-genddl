@@ -3,12 +3,12 @@ package genddl
 import (
 	"go/ast"
 	"go/token"
+	"go/types"
 	"io"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/favclip/genbase"
 	"github.com/mackee/go-genddl/index"
 )
 
@@ -20,7 +20,7 @@ type TableMap struct {
 	Tables        map[*ast.StructType]string
 }
 
-func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string) *TableMap {
+func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info) *TableMap {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
@@ -28,7 +28,7 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	tableMap.Tables = tables
 
 	for _, field := range structType.Fields.List {
-		tableMap.addColumnOrIndex(field)
+		tableMap.addColumnOrIndex(field, ti)
 	}
 
 	return tableMap
@@ -301,13 +301,13 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 	return nil
 }
 
-func (tm *TableMap) addColumnOrIndex(field *ast.Field) {
+func (tm *TableMap) addColumnOrIndex(field *ast.Field, ti *types.Info) {
 	if field.Tag == nil {
 		return
 	}
 	tagMap := tm.parseTag(field.Tag.Value)
 
-	tm.addColumn(field, tagMap)
+	tm.addColumn(field, tagMap, ti)
 	tm.addIndex(field, tagMap)
 }
 
@@ -317,7 +317,16 @@ type ColumnMap struct {
 	TagMap   map[string]string
 }
 
-func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string) {
+var supportedTypes = map[string]struct{}{
+	"time.Time":       {},
+	"sql.NullBool":    {},
+	"sql.NullInt64":   {},
+	"sql.NullFloat64": {},
+	"sql.NullString":  {},
+	"mysql.NullTime":  {},
+}
+
+func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *types.Info) {
 	columnMap := new(ColumnMap)
 
 	if name, ok := tagMap["db"]; ok {
@@ -325,10 +334,20 @@ func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string) {
 	} else {
 		return
 	}
-
-	typeName, err := genbase.ExprToTypeName(field.Type)
-	if err != nil {
-		return
+	var typeName string
+	t := ti.TypeOf(field.Type)
+	for {
+		if _, ok := supportedTypes[t.String()]; ok {
+			typeName = t.String()
+			break
+		}
+		if ta, ok := t.(*types.Named); ok {
+			t = ta.Underlying()
+			continue
+		} else {
+			typeName = t.String()
+			break
+		}
 	}
 	columnMap.TypeName = typeName
 
