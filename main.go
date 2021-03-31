@@ -2,14 +2,15 @@ package genddl
 
 import (
 	"flag"
+	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 type Field struct {
@@ -44,7 +45,7 @@ func Run(from string) {
 
 	tables, funcMap, err := retrieveTables(schemadir)
 	if err != nil {
-		log.Fatal("parse and retrieve table error: %s", err)
+		log.Fatalf("parse and retrieve table error: %s", err)
 	}
 
 	file, err := os.Create(outpath)
@@ -79,13 +80,13 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 		return nil, nil, err
 	}
 
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(
-		fset,
-		path,
-		func(finfo os.FileInfo) bool { return true },
-		parser.ParseComments,
-	)
+	conf := &packages.Config{
+		Mode: packages.NeedCompiledGoFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+	}
+	pkgs, err := packages.Load(conf, path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("retrieveTables: fail to parse from dir: dir=%s, error=%w", schemadir, err)
+	}
 
 	if err != nil {
 		return nil, nil, err
@@ -93,7 +94,7 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 
 	var decls []ast.Decl
 	for _, pkg := range pkgs {
-		for _, file := range pkg.Files {
+		for _, file := range pkg.Syntax {
 			decls = append(decls, file.Decls...)
 		}
 	}
