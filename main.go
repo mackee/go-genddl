@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
+	"go/types"
 	"log"
 	"os"
 	"path/filepath"
@@ -43,7 +44,7 @@ func Run(from string) {
 		log.Fatalf("undefined driver name: %s", driverName)
 	}
 
-	tables, funcMap, err := retrieveTables(schemadir)
+	tables, funcMap, ti, err := retrieveTables(schemadir)
 	if err != nil {
 		log.Fatalf("parse and retrieve table error: %s", err)
 	}
@@ -63,7 +64,7 @@ func Run(from string) {
 	for _, tableName := range tableNames {
 		st := tables[tableName]
 		funcs := funcMap[st]
-		tableMap := NewTableMap(tableName, st, funcs, tablesMap)
+		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti)
 		if tableMap != nil {
 			file.WriteString("\n")
 			tableMap.WriteDDL(file, dialect)
@@ -74,10 +75,10 @@ func Run(from string) {
 
 var typeNameStructMap = map[string]*ast.StructType{}
 
-func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.StructType][]*ast.FuncDecl, error) {
+func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.StructType][]*ast.FuncDecl, *types.Info, error) {
 	path, err := filepath.Abs(schemadir)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	conf := &packages.Config{
@@ -85,15 +86,17 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 	}
 	pkgs, err := packages.Load(conf, path)
 	if err != nil {
-		return nil, nil, fmt.Errorf("retrieveTables: fail to parse from dir: dir=%s, error=%w", schemadir, err)
+		return nil, nil, nil, fmt.Errorf("retrieveTables: fail to parse from dir: dir=%s, error=%w", schemadir, err)
 	}
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	var decls []ast.Decl
+	var ti *types.Info
 	for _, pkg := range pkgs {
+		ti = pkg.TypesInfo
 		for _, file := range pkg.Syntax {
 			decls = append(decls, file.Decls...)
 		}
@@ -162,5 +165,5 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 		}
 	}
 
-	return tables, funcMap, nil
+	return tables, funcMap, ti, nil
 }

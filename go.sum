@@ -1,7 +1,3 @@
-github.com/favclip/genbase v1.0.0 h1:nvoQl0lpkQi3yrSHIrlo0+qfuxv7ZFXpgXii/8CfphA=
-github.com/favclip/genbase v1.0.0/go.mod h1:woIlAaQeKArqr+4fq0587kpfuLsjhJV3DA7xGtEdK7Q=
-github.com/mackee/go-genddl v0.0.0-20181004101258-0e8f5ffc20f4 h1:diiqCjj/GjmluUvRCfzWT5jXYbtLJuyObqAo5Sowyc0=
-github.com/mackee/go-genddl v0.0.0-20181004101258-0e8f5ffc20f4/go.mod h1:z9UikuCTiZRtEjiYdsaWOQTbOymCL2rY3ytWg+868ZE=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
