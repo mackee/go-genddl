@@ -111,23 +111,25 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 				continue
 			}
 
-			comment := genDecl.Doc.List[0]
-			if strings.HasPrefix(comment.Text, "//+table:") {
-				tableName := strings.TrimPrefix(comment.Text, "//+table:")
-				tableName = strings.TrimSpace(tableName)
-				spec := genDecl.Specs[0]
-				ts, ok := spec.(*ast.TypeSpec)
-				if !ok {
-					continue
-				}
-				st, ok := ts.Type.(*ast.StructType)
-				if !ok {
-					continue
-				}
+			for _, comment := range genDecl.Doc.List {
+				if strings.HasPrefix(comment.Text, "//+table:") {
+					tableName := strings.TrimPrefix(comment.Text, "//+table:")
+					tableName = strings.TrimSpace(tableName)
+					spec := genDecl.Specs[0]
+					ts, ok := spec.(*ast.TypeSpec)
+					if !ok {
+						continue
+					}
+					st, ok := ts.Type.(*ast.StructType)
+					if !ok {
+						continue
+					}
 
-				tables[tableName] = st
-				funcMap[st] = make([]*ast.FuncDecl, 0)
-				typeNameStructMap[ts.Name.Name] = st
+					tables[tableName] = st
+					funcMap[st] = make([]*ast.FuncDecl, 0)
+					typeNameStructMap[ts.Name.Name] = st
+					break
+				}
 			}
 		}
 	}
