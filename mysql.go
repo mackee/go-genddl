@@ -39,7 +39,7 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 			size = v
 		}
 		column = "VARCHAR(" + size + ")"
-	case "time.Time", "mysql.NullTime":
+	case "time.Time", "sql.NullTime", "mysql.NullTime":
 		column = "DATETIME"
 
 	}
