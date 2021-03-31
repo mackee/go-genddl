@@ -6,7 +6,7 @@ Generate RDB DDL by go struct
 ## Install
 
 ```
-$ go get install github.com/mackee/go-genddl/cmd/genddl
+$ go install github.com/mackee/go-genddl/cmd/genddl
 ```
 
 ## Example
