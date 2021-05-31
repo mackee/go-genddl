@@ -20,11 +20,11 @@ type TableMap struct {
 	Tables        map[*ast.StructType]string
 }
 
-func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info) *TableMap {
+func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef bool) *TableMap {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
-	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType)
+	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, innerIndexDef)
 	tableMap.Tables = tables
 
 	for _, field := range structType.Fields.List {
@@ -34,7 +34,7 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	return tableMap
 }
 
-func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType) []indexer {
+func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerIndexDef bool) []indexer {
 	var f *ast.FuncDecl
 	for _, funcDecl := range funcs {
 		if funcDecl.Name.String() != indexFuncName {
@@ -103,9 +103,10 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType) []indexer
 					}
 				case "Complex":
 					si = indexIdent{
-						Struct: me,
-						Type:   indexComplex,
-						Column: retrieveIndexColumnByExpr(n.Args),
+						Struct:            me,
+						Type:              indexComplex,
+						Column:            retrieveIndexColumnByExpr(n.Args),
+						InnerComplexIndex: innerIndexDef,
 					}
 				case "ForeignKey":
 					options := make([]index.ForeignKeyOption, 0)

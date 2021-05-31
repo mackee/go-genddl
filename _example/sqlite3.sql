@@ -3,15 +3,14 @@
 DROP TABLE IF EXISTS "product";
 
 CREATE TABLE "product" (
-    "id" INTEGER NOT NULL AUTOINCREMENT,
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
     "type" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
     "created_at" DATETIME NOT NULL,
     "updated_at" DATETIME NULL,
-    PRIMARY KEY ("id", "created_at"),
     UNIQUE ("user_id", "type"),
-    FOREIGN KEY ("user_id") REFERENCES user("id") ON DELETE CASCADE ON UPDATE SET CASCADE
+    FOREIGN KEY ("user_id") REFERENCES user("id") ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
 CREATE INDEX product_user_id_created_at ON product ("user_id", "created_at");
 

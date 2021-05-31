@@ -83,19 +83,19 @@ func (m MysqlDialect) ForeignKey(option index.ForeignKeyOption) string {
 	case index.ForeignKeyDeleteSetNull:
 		return "ON DELETE SET NULL"
 	case index.ForeignKeyDeleteSetDefault:
-		return "ON DELETE SET DEFAULT"
+		return "ON DELETE DEFAULT"
 	case index.ForeignKeyDeleteNoAction:
-		return "ON DELETE SET NO ACTION"
+		return "ON DELETE NO ACTION"
 	case index.ForeignKeyUpdateRestrict:
-		return "ON UPDATE SET RISTRICT"
+		return "ON UPDATE RISTRICT"
 	case index.ForeignKeyUpdateCascade:
 		return "ON UPDATE CASCADE"
 	case index.ForeignKeyUpdateSetNull:
-		return "ON UPDATE SET SET NULL"
+		return "ON UPDATE SET NULL"
 	case index.ForeignKeyUpdateSetDefault:
-		return "ON UPDATE SET SET DEFAULT"
+		return "ON UPDATE DEFAULT"
 	case index.ForeignKeyUpdateNoAction:
-		return "ON UPDATE SET NO ACTION"
+		return "ON UPDATE NO ACTION"
 	}
 	return ""
 }
