@@ -28,11 +28,12 @@ func Run(from string) {
 	fromdir := filepath.Dir(from)
 
 	var schemadir, outpath, driverName string
-	var innerIndexDef bool
+	var innerIndexDef, uniqueWithName bool
 	flag.StringVar(&schemadir, "schemadir", fromdir, "schema declaretion directory")
 	flag.StringVar(&outpath, "outpath", "", "schema target path")
 	flag.StringVar(&driverName, "driver", "mysql", "target driver")
 	flag.BoolVar(&innerIndexDef, "innerindex", false, "Placement of index definition. If this specified, the definition was placement inner of `create table`")
+	flag.BoolVar(&uniqueWithName, "uniquename", false, "Provides a name for the definition of a unique index.")
 
 	flag.Parse()
 
@@ -44,6 +45,8 @@ func Run(from string) {
 		dialect = Sqlite3Dialect{}
 		// It is not supported by SQLite that placement of index definition inner CREATE TABLE
 		innerIndexDef = false
+		// It is not supported by SQLite that unique index definition with name
+		uniqueWithName = false
 	default:
 		log.Fatalf("undefined driver name: %s", driverName)
 	}
@@ -68,7 +71,7 @@ func Run(from string) {
 	for _, tableName := range tableNames {
 		st := tables[tableName]
 		funcs := funcMap[st]
-		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti, innerIndexDef)
+		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti, innerIndexDef, uniqueWithName)
 		if tableMap != nil {
 			file.WriteString("\n")
 			tableMap.WriteDDL(file, dialect)

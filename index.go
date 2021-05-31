@@ -41,6 +41,7 @@ type indexIdent struct {
 	References        []indexColumn
 	ForeignKeyOptions []index.ForeignKeyOption
 	InnerComplexIndex bool
+	UniqueWithName    bool
 }
 
 func (si indexIdent) IsOuterOfCreateTable() bool {
@@ -51,7 +52,11 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 	bs := &bytes.Buffer{}
 	switch si.Type {
 	case indexUnique:
-		bs.WriteString("    UNIQUE (")
+		if si.UniqueWithName {
+			fmt.Fprintf(bs, "    UNIQUE %s (", joinAndStripName(si.Name()))
+		} else {
+			bs.WriteString("    UNIQUE (")
+		}
 	case indexPrimaryKey:
 		bs.WriteString("    PRIMARY KEY (")
 	case indexComplex:
