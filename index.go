@@ -40,13 +40,11 @@ type indexIdent struct {
 	Column            []indexColumn
 	References        []indexColumn
 	ForeignKeyOptions []index.ForeignKeyOption
+	InnerComplexIndex bool
 }
 
 func (si indexIdent) IsOuterOfCreateTable() bool {
-	if si.Type == indexComplex {
-		return true
-	}
-	return false
+	return si.Type == indexComplex && !si.InnerComplexIndex
 }
 
 func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) string {
@@ -57,8 +55,12 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 	case indexPrimaryKey:
 		bs.WriteString("    PRIMARY KEY (")
 	case indexComplex:
-		tableName := tables[si.Struct]
-		fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), tableName)
+		if si.InnerComplexIndex {
+			fmt.Fprintf(bs, "    INDEX %s (", joinAndStripName(si.Name()))
+		} else {
+			tableName := tables[si.Struct]
+			fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), tableName)
+		}
 	case indexForeign:
 		bs.WriteString("    FOREIGN KEY (")
 	}
