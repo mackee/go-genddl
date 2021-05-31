@@ -9,7 +9,7 @@ CREATE TABLE `product` (
     `user_id` INTEGER unsigned NOT NULL,
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NULL,
-    UNIQUE (`user_id`, `type`),
+    UNIQUE user_id_type (`user_id`, `type`),
     INDEX user_id_created_at (`user_id`, `created_at`),
     FOREIGN KEY (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

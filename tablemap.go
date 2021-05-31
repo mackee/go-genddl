@@ -20,11 +20,11 @@ type TableMap struct {
 	Tables        map[*ast.StructType]string
 }
 
-func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef bool) *TableMap {
+func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName bool) *TableMap {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
-	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, innerIndexDef)
+	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, innerIndexDef, uniqueWithName)
 	tableMap.Tables = tables
 
 	for _, field := range structType.Fields.List {
@@ -34,7 +34,7 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	return tableMap
 }
 
-func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerIndexDef bool) []indexer {
+func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerIndexDef, uniqueWithName bool) []indexer {
 	var f *ast.FuncDecl
 	for _, funcDecl := range funcs {
 		if funcDecl.Name.String() != indexFuncName {
@@ -97,9 +97,10 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerInde
 					}
 				case "Unique":
 					si = indexIdent{
-						Struct: me,
-						Type:   indexUnique,
-						Column: retrieveIndexColumnByExpr(n.Args),
+						Struct:         me,
+						Type:           indexUnique,
+						Column:         retrieveIndexColumnByExpr(n.Args),
+						UniqueWithName: uniqueWithName,
 					}
 				case "Complex":
 					si = indexIdent{
