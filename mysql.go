@@ -34,14 +34,19 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 	case "float32":
 		column = "FLOAT"
 	case "string", "sql.NullString":
-		size := MYSQL_DEFAULT_VARCHAR_SIZE
-		if v, ok := col.TagMap["size"]; ok {
-			size = v
+		if _, ok := col.TagMap["text"]; ok {
+			column = "TEXT"
+		} else {
+			size := MYSQL_DEFAULT_VARCHAR_SIZE
+			if v, ok := col.TagMap["size"]; ok {
+				size = v
+			}
+			column = "VARCHAR(" + size + ")"
 		}
-		column = "VARCHAR(" + size + ")"
 	case "time.Time", "sql.NullTime", "mysql.NullTime":
 		column = "DATETIME"
-
+	case "[]byte":
+		column = "BLOB"
 	}
 
 	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {

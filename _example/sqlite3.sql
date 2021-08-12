@@ -7,6 +7,7 @@ CREATE TABLE "product" (
     "name" TEXT NOT NULL,
     "type" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
+    "description" TEXT NOT NULL,
     "created_at" DATETIME NOT NULL,
     "updated_at" DATETIME NULL,
     UNIQUE ("user_id", "type"),
@@ -22,6 +23,7 @@ CREATE TABLE "user" (
     "name" TEXT NOT NULL UNIQUE,
     "age" INTEGER NULL,
     "message" TEXT NULL,
+    "icon_image" BLOB NOT NULL,
     "created_at" DATETIME NOT NULL,
     "updated_at" DATETIME NULL
 ) ;

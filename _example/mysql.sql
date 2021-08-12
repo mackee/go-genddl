@@ -7,6 +7,7 @@ CREATE TABLE `product` (
     `name` VARCHAR(191) NOT NULL,
     `type` INTEGER unsigned NOT NULL,
     `user_id` INTEGER unsigned NOT NULL,
+    `description` TEXT NOT NULL,
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NULL,
     UNIQUE user_id_type (`user_id`, `type`),
@@ -22,6 +23,7 @@ CREATE TABLE `user` (
     `name` VARCHAR(255) NOT NULL UNIQUE,
     `age` BIGINT NULL,
     `message` VARCHAR(191) NULL,
+    `icon_image` BLOB NOT NULL,
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
