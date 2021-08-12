@@ -23,6 +23,8 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 		column = "TEXT"
 	case "time.Time", "mysql.NullTime", "sql.NullTime":
 		column = "DATETIME"
+	case "[]byte":
+		column = "BLOB"
 	}
 
 	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {

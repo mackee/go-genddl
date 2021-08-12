@@ -10,12 +10,13 @@ import (
 // Product is product of user
 //+table: product
 type Product struct {
-	ID        uint32       `db:"id,primarykey,autoincrement"`
-	Name      string       `db:"name"`
-	Type      uint32       `db:"type"`
-	UserID    uint32       `db:"user_id"`
-	CreatedAt time.Time    `db:"created_at"`
-	UpdatedAt sql.NullTime `db:"updated_at"`
+	ID          uint32       `db:"id,primarykey,autoincrement"`
+	Name        string       `db:"name"`
+	Type        uint32       `db:"type"`
+	UserID      uint32       `db:"user_id"`
+	Description string       `db:"description,text"`
+	CreatedAt   time.Time    `db:"created_at"`
+	UpdatedAt   sql.NullTime `db:"updated_at"`
 }
 
 func (s Product) _schemaIndex(methods index.Methods) []index.Definition {
