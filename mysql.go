@@ -45,6 +45,9 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		}
 	case "time.Time", "sql.NullTime", "mysql.NullTime":
 		column = "DATETIME"
+		if v, ok := col.TagMap["precision"]; ok {
+			column += "(" + v + ")"
+		}
 	case "[]byte":
 		column = "BLOB"
 	}

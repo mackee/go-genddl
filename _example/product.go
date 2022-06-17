@@ -15,8 +15,8 @@ type Product struct {
 	Type        uint32       `db:"type"`
 	UserID      uint32       `db:"user_id"`
 	Description string       `db:"description,text"`
-	CreatedAt   time.Time    `db:"created_at"`
-	UpdatedAt   sql.NullTime `db:"updated_at"`
+	CreatedAt   time.Time    `db:"created_at,precision=6"`
+	UpdatedAt   sql.NullTime `db:"updated_at,precision=6"`
 }
 
 func (s Product) _schemaIndex(methods index.Methods) []index.Definition {

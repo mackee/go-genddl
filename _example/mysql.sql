@@ -8,8 +8,8 @@ CREATE TABLE `product` (
     `type` INTEGER unsigned NOT NULL,
     `user_id` INTEGER unsigned NOT NULL,
     `description` TEXT NOT NULL,
-    `created_at` DATETIME NOT NULL,
-    `updated_at` DATETIME NULL,
+    `created_at` DATETIME(6) NOT NULL,
+    `updated_at` DATETIME(6) NULL,
     UNIQUE user_id_type (`user_id`, `type`),
     INDEX user_id_created_at (`user_id`, `created_at`),
     FOREIGN KEY (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE
