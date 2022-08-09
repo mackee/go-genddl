@@ -21,7 +21,7 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 	switch col.TypeName {
 	case "bool", "sql.NullBool":
 		column = "BOOLEAN"
-	case "int", "int16", "int32":
+	case "int", "int16", "sql.NullInt16", "int32", "sql.NullInt32":
 		column = "INTEGER"
 	case "uint16", "uint32":
 		column = "INTEGER unsigned"
@@ -45,7 +45,7 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		}
 	case "time.Time", "sql.NullTime", "mysql.NullTime":
 		column = "DATETIME"
-	case "[]byte":
+	case "[]byte", "sql.NullByte":
 		column = "BLOB"
 	}
 

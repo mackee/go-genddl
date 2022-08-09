@@ -89,7 +89,10 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 	}
 
 	conf := &packages.Config{
-		Mode: packages.NeedCompiledGoFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Mode: packages.NeedCompiledGoFiles |
+			packages.NeedSyntax |
+			packages.NeedTypes |
+			packages.NeedTypesInfo,
 	}
 	pkgs, err := packages.Load(conf, path)
 	if err != nil {

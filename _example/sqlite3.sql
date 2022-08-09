@@ -8,6 +8,7 @@ CREATE TABLE "product" (
     "type" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
+    "icon_image" BLOB NULL,
     "created_at" DATETIME NOT NULL,
     "updated_at" DATETIME NULL,
     UNIQUE ("user_id", "type"),

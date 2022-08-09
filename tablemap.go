@@ -322,9 +322,12 @@ type ColumnMap struct {
 var supportedTypes = map[string]struct{}{
 	"time.Time":                               {},
 	"database/sql.NullBool":                   {},
+	"database/sql.NullInt16":                  {},
+	"database/sql.NullInt32":                  {},
 	"database/sql.NullInt64":                  {},
 	"database/sql.NullFloat64":                {},
 	"database/sql.NullString":                 {},
+	"database/sql.NullByte":                   {},
 	"database/sql.NullTime":                   {},
 	"github.com/go-sql-driver/mysql.NullTime": {},
 }

@@ -15,6 +15,7 @@ type Product struct {
 	Type        uint32       `db:"type"`
 	UserID      uint32       `db:"user_id"`
 	Description string       `db:"description,text"`
+	IconImage   sql.NullByte `db:"icon_image"`
 	CreatedAt   time.Time    `db:"created_at"`
 	UpdatedAt   sql.NullTime `db:"updated_at"`
 }

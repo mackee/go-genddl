@@ -1,6 +1,7 @@
 package genddl
 
 import (
+	"log"
 	"strings"
 
 	"github.com/mackee/go-genddl/index"
@@ -15,7 +16,7 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 	column := ""
 
 	switch col.TypeName {
-	case "bool", "int", "int16", "int32", "int64", "uint16", "uint32", "uint64", "sql.NullBool", "sql.NullInt64":
+	case "bool", "int", "int16", "int32", "int64", "uint16", "uint32", "uint64", "sql.NullBool", "sql.NullInt64", "sql.NullInt32", "sql.NullInt16":
 		column = "INTEGER"
 	case "float32", "float64", "sql.NullFloat64":
 		column = "REAL"
@@ -23,8 +24,10 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 		column = "TEXT"
 	case "time.Time", "mysql.NullTime", "sql.NullTime":
 		column = "DATETIME"
-	case "[]byte":
+	case "[]byte", "sql.NullByte":
 		column = "BLOB"
+	default:
+		log.Printf("[ERROR] undefined types: %s", col.TypeName)
 	}
 
 	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {
