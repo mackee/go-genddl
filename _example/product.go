@@ -22,6 +22,11 @@ type Product struct {
 	Size           sql.NullInt16 `db:"size"`
 	CreatedAt      time.Time     `db:"created_at"`
 	UpdatedAt      sql.NullTime  `db:"updated_at"`
+
+	Hidden           string `db:"-"`       // this field is ignored
+	ExportedOtherTag int32  `json:"other"` // no tag field is ignored
+	ExportedIgnore   string // no tag field is ignored
+	unexported       bool   // unexported field is also ignored
 }
 
 func (s Product) _schemaIndex(methods index.Methods) []index.Definition {
