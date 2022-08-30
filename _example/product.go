@@ -20,8 +20,8 @@ type Product struct {
 	ReceivedUserID NullUserID    `db:"received_user_id"`
 	Description    string        `db:"description,text"`
 	Size           sql.NullInt16 `db:"size"`
-	CreatedAt      time.Time     `db:"created_at"`
-	UpdatedAt      sql.NullTime  `db:"updated_at"`
+	CreatedAt      time.Time     `db:"created_at,precision=6"`
+	UpdatedAt      sql.NullTime  `db:"updated_at,precision=6"`
 
 	Hidden           string `db:"-"`       // this field is ignored
 	ExportedOtherTag int32  `json:"other"` // no tag field is ignored
