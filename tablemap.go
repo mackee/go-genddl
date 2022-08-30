@@ -322,9 +322,12 @@ type ColumnMap struct {
 var supportedTypes = map[string]struct{}{
 	"time.Time":                               {},
 	"database/sql.NullBool":                   {},
+	"database/sql.NullInt16":                  {},
+	"database/sql.NullInt32":                  {},
 	"database/sql.NullInt64":                  {},
 	"database/sql.NullFloat64":                {},
 	"database/sql.NullString":                 {},
+	"database/sql.NullByte":                   {},
 	"database/sql.NullTime":                   {},
 	"github.com/go-sql-driver/mysql.NullTime": {},
 }
@@ -332,7 +335,7 @@ var supportedTypes = map[string]struct{}{
 func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *types.Info) {
 	columnMap := new(ColumnMap)
 
-	if name, ok := tagMap["db"]; ok {
+	if name := tagMap["db"]; name != "" && name != "-" {
 		columnMap.Name = name
 	} else {
 		return

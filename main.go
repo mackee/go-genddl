@@ -89,15 +89,15 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 	}
 
 	conf := &packages.Config{
-		Mode: packages.NeedCompiledGoFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Mode: packages.NeedCompiledGoFiles |
+			packages.NeedSyntax |
+			packages.NeedTypes |
+			packages.NeedTypesInfo,
+		Dir: path,
 	}
-	pkgs, err := packages.Load(conf, path)
+	pkgs, err := packages.Load(conf)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("retrieveTables: fail to parse from dir: dir=%s, error=%w", schemadir, err)
-	}
-
-	if err != nil {
-		return nil, nil, nil, err
 	}
 
 	var decls []ast.Decl
