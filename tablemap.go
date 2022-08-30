@@ -335,7 +335,7 @@ var supportedTypes = map[string]struct{}{
 func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *types.Info) {
 	columnMap := new(ColumnMap)
 
-	if name, ok := tagMap["db"]; ok {
+	if name := tagMap["db"]; name != "" && name != "-" {
 		columnMap.Name = name
 	} else {
 		return
