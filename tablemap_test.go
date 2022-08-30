@@ -16,7 +16,7 @@ const (
 )
 
 func TestTableMap__WriteDDL(t *testing.T) {
-	tables, funcMap, err := retrieveTables(exampleSchemaDir)
+	tables, funcMap, ti, err := retrieveTables(exampleSchemaDir)
 	if err != nil {
 		log.Fatalf("unexpected error: %s", err)
 	}
@@ -27,7 +27,7 @@ func TestTableMap__WriteDDL(t *testing.T) {
 	for tableName, st := range tables {
 		tablesRev[st] = tableName
 	}
-	tm := NewTableMap(hasIndexTableName, product, funcs, tablesRev)
+	tm := NewTableMap(hasIndexTableName, product, funcs, tablesRev, ti, false, false)
 	bs := &bytes.Buffer{}
 	err = tm.WriteDDL(bs, MysqlDialect{})
 	if err != nil {
