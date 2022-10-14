@@ -46,7 +46,7 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 			column = "VARCHAR(" + size + ")"
 		}
 		if m.Collate != "" {
-			column += " COLLATE" + m.Collate
+			column += " COLLATE " + m.Collate
 		}
 	case "time.Time", "sql.NullTime", "mysql.NullTime":
 		column = "DATETIME"
