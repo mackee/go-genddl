@@ -27,13 +27,14 @@ type Table struct {
 func Run(from string) {
 	fromdir := filepath.Dir(from)
 
-	var schemadir, outpath, driverName string
+	var schemadir, outpath, driverName, tableCollate string
 	var innerIndexDef, uniqueWithName bool
 	flag.StringVar(&schemadir, "schemadir", fromdir, "schema declaretion directory")
 	flag.StringVar(&outpath, "outpath", "", "schema target path")
 	flag.StringVar(&driverName, "driver", "mysql", "target driver")
 	flag.BoolVar(&innerIndexDef, "innerindex", false, "Placement of index definition. If this specified, the definition was placement inner of `create table`")
 	flag.BoolVar(&uniqueWithName, "uniquename", false, "Provides a name for the definition of a unique index.")
+	flag.StringVar(&tableCollate, "tablecollate", "", "Provides a collate for the definition of tables.")
 
 	flag.Parse()
 
@@ -71,7 +72,7 @@ func Run(from string) {
 	for _, tableName := range tableNames {
 		st := tables[tableName]
 		funcs := funcMap[st]
-		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti, innerIndexDef, uniqueWithName)
+		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti, innerIndexDef, uniqueWithName, tableCollate)
 		if tableMap != nil {
 			file.WriteString("\n")
 			tableMap.WriteDDL(file, dialect)

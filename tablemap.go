@@ -18,14 +18,16 @@ type TableMap struct {
 	ColumnIndexes []*IndexMap
 	Indexes       []indexer
 	Tables        map[*ast.StructType]string
+	Collate       string
 }
 
-func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName bool) *TableMap {
+func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName bool, tableCollate string) *TableMap {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
 	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, innerIndexDef, uniqueWithName)
 	tableMap.Tables = tables
+	tableMap.Collate = tableCollate
 
 	for _, field := range structType.Fields.List {
 		tableMap.addColumnOrIndex(field, ti)
@@ -281,7 +283,7 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		}
 	}
 
-	suffix := dialect.CreateTableSuffix()
+	suffix := dialect.CreateTableSuffix(tm.Collate)
 	_, err = io.WriteString(w, ") "+suffix+";\n")
 	if err != nil {
 		return err

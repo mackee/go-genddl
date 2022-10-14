@@ -15,7 +15,7 @@ CREATE TABLE `product` (
     UNIQUE user_id_type (`user_id`, `type`),
     INDEX user_id_created_at (`user_id`, `created_at`),
     FOREIGN KEY (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 DROP TABLE IF EXISTS `user`;
@@ -28,5 +28,5 @@ CREATE TABLE `user` (
     `icon_image` BLOB NOT NULL,
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

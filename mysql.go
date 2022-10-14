@@ -1,6 +1,7 @@
 package genddl
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/mackee/go-genddl/index"
@@ -74,7 +75,10 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 	return column
 }
 
-func (m MysqlDialect) CreateTableSuffix() string {
+func (m MysqlDialect) CreateTableSuffix(collate string) string {
+	if collate != "" {
+		return fmt.Sprintf("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=%s", collate)
+	}
 	return "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 }
 
