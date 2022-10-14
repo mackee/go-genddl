@@ -41,7 +41,7 @@ func Run(from string) {
 	var dialect Dialect
 	switch driverName {
 	case "mysql":
-		dialect = MysqlDialect{}
+		dialect = MysqlDialect{Collate: tableCollate}
 	case "sqlite3":
 		dialect = Sqlite3Dialect{}
 		// It is not supported by SQLite that placement of index definition inner CREATE TABLE
@@ -72,7 +72,7 @@ func Run(from string) {
 	for _, tableName := range tableNames {
 		st := tables[tableName]
 		funcs := funcMap[st]
-		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti, innerIndexDef, uniqueWithName, tableCollate)
+		tableMap := NewTableMap(tableName, st, funcs, tablesMap, ti, innerIndexDef, uniqueWithName)
 		if tableMap != nil {
 			file.WriteString("\n")
 			tableMap.WriteDDL(file, dialect)

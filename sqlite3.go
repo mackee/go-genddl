@@ -52,7 +52,7 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 	return column
 }
 
-func (m Sqlite3Dialect) CreateTableSuffix(_ string) string {
+func (m Sqlite3Dialect) CreateTableSuffix() string {
 	return ""
 }
 

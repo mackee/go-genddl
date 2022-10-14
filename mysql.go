@@ -12,6 +12,7 @@ const (
 )
 
 type MysqlDialect struct {
+	Collate string
 }
 
 func (m MysqlDialect) DriverName() string { return "mysql" }
@@ -44,6 +45,9 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 			}
 			column = "VARCHAR(" + size + ")"
 		}
+		if m.Collate != "" {
+			column += " COLLATE" + m.Collate
+		}
 	case "time.Time", "sql.NullTime", "mysql.NullTime":
 		column = "DATETIME"
 		if v, ok := col.TagMap["precision"]; ok {
@@ -75,9 +79,9 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 	return column
 }
 
-func (m MysqlDialect) CreateTableSuffix(collate string) string {
-	if collate != "" {
-		return fmt.Sprintf("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=%s", collate)
+func (m MysqlDialect) CreateTableSuffix() string {
+	if m.Collate != "" {
+		return fmt.Sprintf("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=%s", m.Collate)
 	}
 	return "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 }
