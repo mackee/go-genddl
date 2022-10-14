@@ -27,20 +27,21 @@ type Table struct {
 func Run(from string) {
 	fromdir := filepath.Dir(from)
 
-	var schemadir, outpath, driverName string
+	var schemadir, outpath, driverName, tableCollate string
 	var innerIndexDef, uniqueWithName bool
 	flag.StringVar(&schemadir, "schemadir", fromdir, "schema declaretion directory")
 	flag.StringVar(&outpath, "outpath", "", "schema target path")
 	flag.StringVar(&driverName, "driver", "mysql", "target driver")
 	flag.BoolVar(&innerIndexDef, "innerindex", false, "Placement of index definition. If this specified, the definition was placement inner of `create table`")
 	flag.BoolVar(&uniqueWithName, "uniquename", false, "Provides a name for the definition of a unique index.")
+	flag.StringVar(&tableCollate, "tablecollate", "", "Provides a collate for the definition of tables.")
 
 	flag.Parse()
 
 	var dialect Dialect
 	switch driverName {
 	case "mysql":
-		dialect = MysqlDialect{}
+		dialect = MysqlDialect{Collate: tableCollate}
 	case "sqlite3":
 		dialect = Sqlite3Dialect{}
 		// It is not supported by SQLite that placement of index definition inner CREATE TABLE

@@ -7,7 +7,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-//go:generate go run ../cmd/genddl/main.go -outpath=./mysql.sql -innerindex -uniquename
+//go:generate go run ../cmd/genddl/main.go -outpath=./mysql.sql -innerindex -uniquename -tablecollate=utf8mb4_general_ci
 //go:generate go run ../cmd/genddl/main.go -outpath=./sqlite3.sql -driver=sqlite3
 
 //+table: user

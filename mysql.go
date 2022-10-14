@@ -1,6 +1,7 @@
 package genddl
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/mackee/go-genddl/index"
@@ -11,6 +12,7 @@ const (
 )
 
 type MysqlDialect struct {
+	Collate string
 }
 
 func (m MysqlDialect) DriverName() string { return "mysql" }
@@ -42,6 +44,9 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 				size = v
 			}
 			column = "VARCHAR(" + size + ")"
+		}
+		if m.Collate != "" {
+			column += " COLLATE " + m.Collate
 		}
 	case "time.Time", "sql.NullTime", "mysql.NullTime":
 		column = "DATETIME"
@@ -75,6 +80,9 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 }
 
 func (m MysqlDialect) CreateTableSuffix() string {
+	if m.Collate != "" {
+		return fmt.Sprintf("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=%s", m.Collate)
+	}
 	return "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 }
 
