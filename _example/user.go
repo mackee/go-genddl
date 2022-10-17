@@ -10,7 +10,8 @@ import (
 //go:generate go run ../cmd/genddl/main.go -outpath=./mysql.sql -innerindex -uniquename -tablecollate=utf8mb4_general_ci
 //go:generate go run ../cmd/genddl/main.go -outpath=./sqlite3.sql -driver=sqlite3
 
-//+table: user
+// User is a user of the service
+// +table: user
 type User struct {
 	ID        uint32         `db:"id,primarykey,autoincrement"`
 	Name      string         `db:"name,unique,size=255"`
