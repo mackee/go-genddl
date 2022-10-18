@@ -11,7 +11,7 @@ import (
 type NullUserID = sql.NullInt32
 
 // Product is product of user
-//+table: product
+// +table: product
 type Product struct {
 	ID             uint32        `db:"id,primarykey,autoincrement"`
 	Name           string        `db:"name"`

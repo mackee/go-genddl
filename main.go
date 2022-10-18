@@ -123,8 +123,7 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 			}
 
 			for _, comment := range genDecl.Doc.List {
-				if strings.HasPrefix(comment.Text, "//+table:") {
-					tableName := strings.TrimPrefix(comment.Text, "//+table:")
+				if tableName := trimAnnotation(comment.Text); tableName != comment.Text {
 					tableName = strings.TrimSpace(tableName)
 					spec := genDecl.Specs[0]
 					ts, ok := spec.(*ast.TypeSpec)
@@ -174,4 +173,14 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 	}
 
 	return tables, funcMap, ti, nil
+}
+
+func trimAnnotation(comment string) string {
+	prefixes := []string{"//+table:", "// +table:"}
+	for _, prefix := range prefixes {
+		if trimmed := strings.TrimPrefix(comment, prefix); trimmed != comment {
+			return trimmed
+		}
+	}
+	return comment
 }
