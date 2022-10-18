@@ -176,11 +176,11 @@ func retrieveTables(schemadir string) (map[string]*ast.StructType, map[*ast.Stru
 }
 
 func trimAnnotation(comment string) string {
-	if trimmed := strings.TrimPrefix(comment, "//+table:"); trimmed != comment {
-		return trimmed
-	}
-	if trimmed := strings.TrimPrefix(comment, "// +table:"); trimmed != comment {
-		return trimmed
+	prefixes := []string{"//+table:", "// +table:"}
+	for _, prefix := range prefixes {
+		if trimmed := strings.TrimPrefix(comment, prefix); trimmed != comment {
+			return trimmed
+		}
 	}
 	return comment
 }
