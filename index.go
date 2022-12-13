@@ -76,9 +76,9 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 			bs.WriteString("    FOREIGN KEY (")
 		}
 	case indexSpatial:
-		fmt.Fprintf(bs, "    SPATIAL %s (", joinAndStripName(si.Name()))
+		fmt.Fprintf(bs, "    SPATIAL KEY %s (", joinAndStripName(si.Name()))
 	case indexFulltext:
-		fmt.Fprintf(bs, "    FULLTEXT %s (", joinAndStripName(si.Name()))
+		fmt.Fprintf(bs, "    FULLTEXT KEY %s (", joinAndStripName(si.Name()))
 	}
 	columns := []string{}
 	for _, column := range si.Column {
