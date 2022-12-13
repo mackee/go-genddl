@@ -345,7 +345,6 @@ var supportedTypes = map[string]struct{}{
 	"database/sql.NullByte":                   {},
 	"database/sql.NullTime":                   {},
 	"github.com/go-sql-driver/mysql.NullTime": {},
-	"database/sql/driver.Valuer":              {},
 }
 
 func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *types.Info) {

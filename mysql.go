@@ -2,7 +2,6 @@ package genddl
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/mackee/go-genddl/index"
@@ -55,12 +54,10 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 			column += "(" + v + ")"
 		}
 	case "[]byte":
-		column = "BLOB"
-	case "driver.Valuer":
 		if v, ok := col.TagMap["type"]; ok {
 			column = v
 		} else {
-			log.Printf("[ERROR] must be defined type value: %s", col.Name)
+			column = "BLOB"
 		}
 	}
 
