@@ -2,6 +2,7 @@ package genddl
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/mackee/go-genddl/index"
@@ -55,6 +56,12 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		}
 	case "[]byte":
 		column = "BLOB"
+	case "driver.Valuer":
+		if v, ok := col.TagMap["type"]; ok {
+			column = v
+		} else {
+			log.Printf("[ERROR] must be defined type value: %s", col.Name)
+		}
 	}
 
 	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {
@@ -63,6 +70,9 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		column += " NOT NULL"
 	}
 
+	if v, ok := col.TagMap["srid"]; ok {
+		column += " SRID " + v
+	}
 	if v, ok := col.TagMap["default"]; ok {
 		column += " DEFAULT " + v
 	}

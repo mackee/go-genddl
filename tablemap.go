@@ -20,11 +20,11 @@ type TableMap struct {
 	Tables        map[*ast.StructType]string
 }
 
-func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName bool) *TableMap {
+func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName, foreignKeyWithName bool) *TableMap {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
-	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, innerIndexDef, uniqueWithName)
+	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, innerIndexDef, uniqueWithName, foreignKeyWithName)
 	tableMap.Tables = tables
 
 	for _, field := range structType.Fields.List {
@@ -34,7 +34,7 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	return tableMap
 }
 
-func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerIndexDef, uniqueWithName bool) []indexer {
+func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerIndexDef, uniqueWithName, foreignKeyWithName bool) []indexer {
 	var f *ast.FuncDecl
 	for _, funcDecl := range funcs {
 		if funcDecl.Name.String() != indexFuncName {
@@ -115,11 +115,26 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerInde
 						options = retrieveIndexForeignKeyOptionByExpr(n.Args[2:])
 					}
 					si = indexIdent{
+						Struct:             me,
+						Type:               indexForeign,
+						Column:             retrieveIndexColumnByExpr([]ast.Expr{n.Args[0]}),
+						References:         retrieveIndexColumnByExpr([]ast.Expr{n.Args[1]}),
+						ForeignKeyOptions:  options,
+						ForeignKeyWithName: foreignKeyWithName,
+					}
+				case "Spatial":
+					si = indexIdent{
 						Struct:            me,
-						Type:              indexForeign,
-						Column:            retrieveIndexColumnByExpr([]ast.Expr{n.Args[0]}),
-						References:        retrieveIndexColumnByExpr([]ast.Expr{n.Args[1]}),
-						ForeignKeyOptions: options,
+						Type:              indexSpatial,
+						Column:            retrieveIndexColumnByExpr(n.Args),
+						InnerComplexIndex: innerIndexDef,
+					}
+				case "Fulltext":
+					si = indexIdent{
+						Struct:            me,
+						Type:              indexFulltext,
+						Column:            retrieveIndexColumnByExpr(n.Args),
+						InnerComplexIndex: innerIndexDef,
 					}
 				default:
 					break OUTER
@@ -330,6 +345,7 @@ var supportedTypes = map[string]struct{}{
 	"database/sql.NullByte":                   {},
 	"database/sql.NullTime":                   {},
 	"github.com/go-sql-driver/mysql.NullTime": {},
+	"database/sql/driver.Valuer":              {},
 }
 
 func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *types.Info) {

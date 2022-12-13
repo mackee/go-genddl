@@ -26,6 +26,12 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 		column = "DATETIME"
 	case "[]byte":
 		column = "BLOB"
+	case "driver.Valuer":
+		if v, ok := col.TagMap["type"]; ok {
+			column = v
+		} else {
+			log.Printf("[ERROR] must be defined type value: %s", col.Name)
+		}
 	default:
 		log.Printf("[ERROR] undefined types: %s", col.TypeName)
 	}
