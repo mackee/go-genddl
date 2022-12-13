@@ -54,7 +54,11 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 			column += "(" + v + ")"
 		}
 	case "[]byte":
-		column = "BLOB"
+		if v, ok := col.TagMap["type"]; ok {
+			column = v
+		} else {
+			column = "BLOB"
+		}
 	}
 
 	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {
@@ -63,6 +67,9 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		column += " NOT NULL"
 	}
 
+	if v, ok := col.TagMap["srid"]; ok {
+		column += " SRID " + v
+	}
 	if v, ok := col.TagMap["default"]; ok {
 		column += " DEFAULT " + v
 	}

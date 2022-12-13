@@ -24,6 +24,8 @@ type Methods interface {
 	Unique(columns ...interface{}) Definition
 	Complex(columns ...interface{}) Definition
 	ForeignKey(myColumn interface{}, foreignColumn interface{}, options ...ForeignKeyOption) Definition
+	Spatial(columns ...interface{}) Definition
+	Fulltext(columns ...string) Definition
 }
 
 type Definition string

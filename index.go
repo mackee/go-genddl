@@ -27,6 +27,8 @@ const (
 	indexPrimaryKey
 	indexComplex
 	indexForeign
+	indexSpatial
+	indexFulltext
 )
 
 type indexer interface {
@@ -35,13 +37,14 @@ type indexer interface {
 }
 
 type indexIdent struct {
-	Struct            *ast.StructType
-	Type              indexType
-	Column            []indexColumn
-	References        []indexColumn
-	ForeignKeyOptions []index.ForeignKeyOption
-	InnerComplexIndex bool
-	UniqueWithName    bool
+	Struct             *ast.StructType
+	Type               indexType
+	Column             []indexColumn
+	References         []indexColumn
+	ForeignKeyOptions  []index.ForeignKeyOption
+	InnerComplexIndex  bool
+	UniqueWithName     bool
+	ForeignKeyWithName bool
 }
 
 func (si indexIdent) IsOuterOfCreateTable() bool {
@@ -67,7 +70,15 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 			fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), tableName)
 		}
 	case indexForeign:
-		bs.WriteString("    FOREIGN KEY (")
+		if si.ForeignKeyWithName {
+			fmt.Fprintf(bs, "    FOREIGN KEY %s (", joinAndStripName(si.Name()))
+		} else {
+			bs.WriteString("    FOREIGN KEY (")
+		}
+	case indexSpatial:
+		fmt.Fprintf(bs, "    SPATIAL KEY %s (", joinAndStripName(si.Name()))
+	case indexFulltext:
+		fmt.Fprintf(bs, "    FULLTEXT KEY %s (", joinAndStripName(si.Name()))
 	}
 	columns := []string{}
 	for _, column := range si.Column {
