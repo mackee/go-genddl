@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 const (
@@ -16,18 +18,18 @@ const (
 )
 
 func TestTableMap__WriteDDL(t *testing.T) {
-	tables, funcMap, ti, err := retrieveTables(exampleSchemaDir)
+	tr, err := retrieveTables(exampleSchemaDir)
 	if err != nil {
 		log.Fatalf("unexpected error: %s", err)
 	}
 
-	product := tables[hasIndexTableName]
-	funcs := funcMap[product]
+	product := tr.tables[hasIndexTableName]
+	funcs := tr.funcs[product]
 	tablesRev := map[*ast.StructType]string{}
-	for tableName, st := range tables {
+	for tableName, st := range tr.tables {
 		tablesRev[st] = tableName
 	}
-	tm := NewTableMap(hasIndexTableName, product, funcs, tablesRev, ti, false, false)
+	tm := NewTableMap(hasIndexTableName, product, funcs, tablesRev, tr.ti, false, false, false)
 	bs := &bytes.Buffer{}
 	err = tm.WriteDDL(bs, MysqlDialect{})
 	if err != nil {
@@ -42,8 +44,8 @@ func TestTableMap__WriteDDL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error on read expected SQL: %s", err)
 	}
-	if bs.String() != string(_expected) {
-		t.Errorf("result is not match: \n%s\n\t\tvs\n%s", bs.String(), string(_expected))
+	if diff := cmp.Diff(string(_expected), bs.String()); diff != "" {
+		t.Errorf("result is mismatch (-want +got):\n%s", diff)
 	}
 
 }

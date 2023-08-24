@@ -7,8 +7,8 @@ CREATE TABLE "location" (
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "place" GEOMETRY NOT NULL,
-    SPATIAL place ("place"),
-    FULLTEXT description ("description")
+    SPATIAL KEY place ("place"),
+    FULLTEXT KEY description ("description")
 ) ;
 
 
@@ -41,4 +41,9 @@ CREATE TABLE "user" (
     "created_at" DATETIME NOT NULL,
     "updated_at" DATETIME NULL
 ) ;
+
+CREATE VIEW user_product AS
+  SELECT p.id, u.name, ru.name, p.id, p.type FROM product AS p
+    INNER JOIN user AS u ON p.user_id = u.id
+    LEFT JOIN user AS ru ON p.received_user_id = ru.id;
 

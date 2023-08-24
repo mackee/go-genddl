@@ -322,7 +322,7 @@ func (tm *TableMap) addColumnOrIndex(field *ast.Field, ti *types.Info) {
 	if field.Tag == nil {
 		return
 	}
-	tagMap := tm.parseTag(field.Tag.Value)
+	tagMap := parseTag(field.Tag.Value)
 
 	tm.addColumn(field, tagMap, ti)
 	tm.addIndex(field, tagMap)
@@ -406,7 +406,7 @@ func (tm *TableMap) addIndex(field *ast.Field, tagMap map[string]string) {
 	tm.ColumnIndexes = append(tm.ColumnIndexes, indexMap)
 }
 
-func (tm *TableMap) parseTag(v string) map[string]string {
+func parseTag(v string) map[string]string {
 	st := reflect.StructTag(strings.Replace(v, "`", "", 2))
 	dbTag := st.Get("db")
 	tags := strings.Split(dbTag, ",")
