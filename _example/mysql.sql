@@ -42,7 +42,7 @@ CREATE TABLE `user` (
     `updated_at` DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE VIEW user_product AS
+CREATE VIEW "user_product" AS
   SELECT p.id, u.name, ru.name, p.id, p.type FROM product AS p
     INNER JOIN user AS u ON p.user_id = u.id
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;

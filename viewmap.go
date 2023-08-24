@@ -85,7 +85,7 @@ func retrieveSelectStatementByFuncs(funcs []*ast.FuncDecl) string {
 }
 
 func (vm *ViewMap) WriteDDL(w io.Writer) error {
-	io.WriteString(w, "CREATE VIEW "+vm.Name+" AS\n")
+	io.WriteString(w, "CREATE VIEW \""+vm.Name+"\" AS\n")
 	io.WriteString(w, vm.SelectStatement+";\n\n")
 	return nil
 }
