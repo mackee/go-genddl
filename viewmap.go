@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"go/ast"
+	"go/types"
 	"io"
 	"log"
 	"strconv"
@@ -20,15 +21,25 @@ type ViewMap struct {
 	SelectStatement string
 }
 
-func NewViewMap(name string, st *ast.StructType, funcs []*ast.FuncDecl) *ViewMap {
+type newViewMapInput struct {
+	name  string
+	st    *ast.StructType
+	funcs []*ast.FuncDecl
+	ti    *types.Info
+}
+
+func NewViewMap(input newViewMapInput) *ViewMap {
+	st := input.st
+	funcs := input.funcs
+	name := input.name
 	columns := make([]string, 0, len(st.Fields.List))
 	for _, field := range st.Fields.List {
-		tgm := parseTag(field.Tag.Value)
-		dbtag, ok := tgm["db"]
-		if !ok {
-			continue
+		t := input.ti.TypeOf(field.Type)
+		tagText := field.Tag.Value
+		cs := columnsByFields(t, input.ti, tagText, "")
+		for _, c := range cs {
+			columns = append(columns, c.name)
 		}
-		columns = append(columns, dbtag)
 	}
 	selectStatement := retrieveSelectStatementByFuncs(funcs)
 	if selectStatement == "" {
@@ -84,8 +95,20 @@ func retrieveSelectStatementByFuncs(funcs []*ast.FuncDecl) string {
 	return ""
 }
 
-func (vm *ViewMap) WriteDDL(w io.Writer) error {
-	io.WriteString(w, "CREATE VIEW \""+vm.Name+"\" AS\n")
+func (vm *ViewMap) fields(dialect Dialect) string {
+	sb := &strings.Builder{}
+	for i, c := range vm.Columns {
+		if i != 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(dialect.QuoteField(c))
+	}
+	return sb.String()
+}
+
+func (vm *ViewMap) WriteDDL(w io.Writer, dialect Dialect) error {
+	io.WriteString(w, "CREATE VIEW "+dialect.QuoteField(vm.Name)+"\n")
+	io.WriteString(w, "  ("+vm.fields(dialect)+") AS\n")
 	io.WriteString(w, vm.SelectStatement+";\n\n")
 	return nil
 }

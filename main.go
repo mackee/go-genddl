@@ -86,12 +86,17 @@ func Run(from string) {
 	sort.Strings(viewNames)
 	for _, viewName := range viewNames {
 		v := tr.views[viewName]
-		vm := NewViewMap(viewName, v, tr.funcs[v])
+		vm := NewViewMap(newViewMapInput{
+			name:  viewName,
+			st:    v,
+			funcs: tr.funcs[v],
+			ti:    tr.ti,
+		})
 		if vm == nil {
 			log.Println("[ERROR] skip view:", viewName)
 			continue
 		}
-		vm.WriteDDL(file)
+		vm.WriteDDL(file, dialect)
 	}
 }
 
