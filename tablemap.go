@@ -322,10 +322,9 @@ func (tm *TableMap) addColumnOrIndex(field *ast.Field, ti *types.Info) {
 	if field.Tag == nil {
 		return
 	}
-	tagMap := tm.parseTag(field.Tag.Value)
+	tv := field.Tag.Value
 
-	tm.addColumn(field, tagMap, ti)
-	tm.addIndex(field, tagMap)
+	tm.addColumn(field, tv, ti)
 }
 
 type ColumnMap struct {
@@ -347,35 +346,17 @@ var supportedTypes = map[string]struct{}{
 	"github.com/go-sql-driver/mysql.NullTime": {},
 }
 
-func (tm *TableMap) addColumn(field *ast.Field, tagMap map[string]string, ti *types.Info) {
-	columnMap := new(ColumnMap)
-
-	if name := tagMap["db"]; name != "" && name != "-" {
-		columnMap.Name = name
-	} else {
-		return
-	}
-	var typeName string
+func (tm *TableMap) addColumn(field *ast.Field, tag string, ti *types.Info) {
 	t := ti.TypeOf(field.Type)
-	for {
-		if _, ok := supportedTypes[t.String()]; ok {
-			nt := t.(*types.Named)
-			typeName = strings.Join([]string{nt.Obj().Pkg().Name(), nt.Obj().Name()}, ".")
-			break
-		}
-		if ta, ok := t.(*types.Named); ok {
-			t = ta.Underlying()
-			continue
-		} else {
-			typeName = t.String()
-			break
-		}
+	cs := columnsByFields(t, ti, tag, "")
+	for _, c := range cs {
+		tm.Columns = append(tm.Columns, &ColumnMap{
+			Name:     c.name,
+			TypeName: c.typeName,
+			TagMap:   c.tagMap,
+		})
+		tm.addIndex(c.tagMap)
 	}
-	columnMap.TypeName = typeName
-
-	columnMap.TagMap = tagMap
-
-	tm.Columns = append(tm.Columns, columnMap)
 }
 
 type IndexMap struct {
@@ -386,8 +367,8 @@ type IndexMap struct {
 	TagMap     map[string]string
 }
 
-func (tm *TableMap) addIndex(field *ast.Field, tagMap map[string]string) {
-	indexMap := new(IndexMap)
+func (tm *TableMap) addIndex(tagMap map[string]string) {
+	indexMap := &IndexMap{}
 
 	if name, ok := tagMap["index"]; ok {
 		indexMap.Name = name
@@ -406,9 +387,12 @@ func (tm *TableMap) addIndex(field *ast.Field, tagMap map[string]string) {
 	tm.ColumnIndexes = append(tm.ColumnIndexes, indexMap)
 }
 
-func (tm *TableMap) parseTag(v string) map[string]string {
+func parseTag(v string) map[string]string {
 	st := reflect.StructTag(strings.Replace(v, "`", "", 2))
 	dbTag := st.Get("db")
+	if dbTag == "" {
+		return nil
+	}
 	tags := strings.Split(dbTag, ",")
 	tagMap := map[string]string{}
 

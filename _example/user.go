@@ -3,8 +3,6 @@ package example
 import (
 	"database/sql"
 	"time"
-
-	"github.com/go-sql-driver/mysql"
 )
 
 //go:generate go run ../cmd/genddl/main.go -outpath=./mysql.sql -innerindex -uniquename -foreignkeyname -tablecollate=utf8mb4_general_ci
@@ -19,5 +17,5 @@ type User struct {
 	Message   sql.NullString `db:"message"`
 	IconImage []byte         `db:"icon_image"`
 	CreatedAt time.Time      `db:"created_at"`
-	UpdatedAt mysql.NullTime `db:"updated_at"`
+	UpdatedAt sql.NullTime   `db:"updated_at"`
 }

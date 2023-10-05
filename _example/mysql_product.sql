@@ -8,8 +8,8 @@ CREATE TABLE `product` (
     `received_user_id` INTEGER NULL,
     `description` TEXT NOT NULL,
     `size` INTEGER NULL,
-    `created_at` DATETIME NOT NULL,
-    `updated_at` DATETIME NULL,
+    `created_at` DATETIME(6) NOT NULL,
+    `updated_at` DATETIME(6) NULL,
     UNIQUE (`user_id`, `type`),
     FOREIGN KEY (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

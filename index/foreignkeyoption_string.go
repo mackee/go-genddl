@@ -2,7 +2,24 @@
 
 package index
 
-import "fmt"
+import "strconv"
+
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[ForeignKeyDeleteRestrict-0]
+	_ = x[ForeignKeyDeleteCascade-1]
+	_ = x[ForeignKeyDeleteSetNull-2]
+	_ = x[ForeignKeyDeleteSetDefault-3]
+	_ = x[ForeignKeyDeleteNoAction-4]
+	_ = x[ForeignKeyUpdateRestrict-5]
+	_ = x[ForeignKeyUpdateCascade-6]
+	_ = x[ForeignKeyUpdateSetNull-7]
+	_ = x[ForeignKeyUpdateSetDefault-8]
+	_ = x[ForeignKeyUpdateNoAction-9]
+	_ = x[None-10]
+}
 
 const _ForeignKeyOption_name = "ForeignKeyDeleteRestrictForeignKeyDeleteCascadeForeignKeyDeleteSetNullForeignKeyDeleteSetDefaultForeignKeyDeleteNoActionForeignKeyUpdateRestrictForeignKeyUpdateCascadeForeignKeyUpdateSetNullForeignKeyUpdateSetDefaultForeignKeyUpdateNoActionNone"
 
@@ -10,7 +27,7 @@ var _ForeignKeyOption_index = [...]uint8{0, 24, 47, 70, 96, 120, 144, 167, 190, 
 
 func (i ForeignKeyOption) String() string {
 	if i < 0 || i >= ForeignKeyOption(len(_ForeignKeyOption_index)-1) {
-		return fmt.Sprintf("ForeignKeyOption(%d)", i)
+		return "ForeignKeyOption(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 	return _ForeignKeyOption_name[_ForeignKeyOption_index[i]:_ForeignKeyOption_index[i+1]]
 }
