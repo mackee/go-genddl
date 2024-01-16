@@ -23,6 +23,10 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 	switch col.TypeName {
 	case "bool", "sql.NullBool":
 		column = "BOOLEAN"
+	case "int8":
+		column = "TINYINT"
+	case "uint8":
+		column = "TINYINT unsigned"
 	case "int", "int16", "sql.NullInt16", "int32", "sql.NullInt32", "sql.NullByte":
 		column = "INTEGER"
 	case "uint16", "uint32":
@@ -38,6 +42,8 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 	case "string", "sql.NullString":
 		if _, ok := col.TagMap["text"]; ok {
 			column = "TEXT"
+		} else if _, ok := col.TagMap["mediumtext"]; ok {
+			column = "MEDIUMTEXT"
 		} else {
 			size := MYSQL_DEFAULT_VARCHAR_SIZE
 			if v, ok := col.TagMap["size"]; ok {

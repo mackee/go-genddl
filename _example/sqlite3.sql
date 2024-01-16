@@ -21,7 +21,10 @@ CREATE TABLE "product" (
     "user_id" INTEGER NOT NULL,
     "received_user_id" INTEGER NULL,
     "description" TEXT NOT NULL,
+    "full_description" TEXT NOT NULL,
     "size" INTEGER NULL,
+    "status" INTEGER NOT NULL,
+    "category" INTEGER NOT NULL,
     "created_at" DATETIME NOT NULL,
     "updated_at" DATETIME NULL,
     UNIQUE ("user_id", "type"),
@@ -49,7 +52,7 @@ CREATE VIEW "user_product"
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;
 
 CREATE VIEW "user_product_structured"
-  ("p_id", "p_name", "p_type", "p_user_id", "p_received_user_id", "p_description", "p_size", "p_created_at", "p_updated_at", "u_id", "u_name", "u_age", "u_message", "u_icon_image", "u_created_at", "u_updated_at", "ru_id", "ru_name", "ru_age", "ru_message", "ru_icon_image", "ru_created_at", "ru_updated_at") AS 
+  ("p_id", "p_name", "p_type", "p_user_id", "p_received_user_id", "p_description", "p_full_description", "p_size", "p_status", "p_category", "p_created_at", "p_updated_at", "u_id", "u_name", "u_age", "u_message", "u_icon_image", "u_created_at", "u_updated_at", "ru_id", "ru_name", "ru_age", "ru_message", "ru_icon_image", "ru_created_at", "ru_updated_at") AS
   SELECT p.*, u.*, ru.* FROM product AS p
     INNER JOIN user AS u ON p.user_id = u.id
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;
