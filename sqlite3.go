@@ -16,7 +16,7 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 	column := ""
 
 	switch col.TypeName {
-	case "bool", "int", "int16", "int32", "int64", "uint16", "uint32", "uint64", "sql.NullBool", "sql.NullInt64", "sql.NullInt32", "sql.NullInt16", "sql.NullByte":
+	case "bool", "int", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "sql.NullBool", "sql.NullInt64", "sql.NullInt32", "sql.NullInt16", "sql.NullByte":
 		column = "INTEGER"
 	case "float32", "float64", "sql.NullFloat64":
 		column = "REAL"
