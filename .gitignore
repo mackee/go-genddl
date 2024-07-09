@@ -27,3 +27,4 @@ _testmain.go
 *~
 vendor/
 go.work
+go.work.sum

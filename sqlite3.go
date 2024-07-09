@@ -1,28 +1,26 @@
 package genddl
 
 import (
-	"log"
-	"strings"
+	"fmt"
 
 	"github.com/mackee/go-genddl/index"
 )
 
-type Sqlite3Dialect struct {
-}
+type Sqlite3Dialect struct{}
 
 func (m Sqlite3Dialect) DriverName() string { return "sqlite3" }
 
-func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
+func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) (string, error) {
 	column := ""
 
 	switch col.TypeName {
-	case "bool", "int", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "sql.NullBool", "sql.NullInt64", "sql.NullInt32", "sql.NullInt16", "sql.NullByte":
+	case "bool", "int", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64":
 		column = "INTEGER"
-	case "float32", "float64", "sql.NullFloat64":
+	case "float32", "float64":
 		column = "REAL"
-	case "string", "sql.NullString":
+	case "string":
 		column = "TEXT"
-	case "time.Time", "mysql.NullTime", "sql.NullTime":
+	case "time.Time":
 		column = "DATETIME"
 	case "[]byte":
 		if v, ok := col.TagMap["type"]; ok {
@@ -31,10 +29,10 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 			column = "BLOB"
 		}
 	default:
-		log.Printf("[ERROR] undefined types: %s", col.TypeName)
+		return "", fmt.Errorf("unsupported types: %s, column=%s", col.TypeName, col.Name)
 	}
 
-	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {
+	if _, ok := col.TagMap["null"]; ok || col.IsNullable {
 		column += " NULL"
 	} else {
 		column += " NOT NULL"
@@ -53,7 +51,7 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) string {
 		column += " AUTOINCREMENT"
 	}
 
-	return column
+	return column, nil
 }
 
 func (m Sqlite3Dialect) CreateTableSuffix() string {
