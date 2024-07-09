@@ -19,7 +19,7 @@ CREATE TABLE `product` (
     `name` VARCHAR(191) COLLATE utf8mb4_general_ci NOT NULL,
     `type` INTEGER unsigned NOT NULL,
     `user_id` INTEGER unsigned NOT NULL,
-    `received_user_id` INTEGER NULL,
+    `received_user_id` INTEGER unsigned NULL,
     `description` TEXT COLLATE utf8mb4_general_ci NOT NULL,
     `full_description` MEDIUMTEXT COLLATE utf8mb4_general_ci NOT NULL,
     `size` INTEGER NULL,
@@ -27,6 +27,7 @@ CREATE TABLE `product` (
     `category` TINYINT NOT NULL,
     `created_at` DATETIME(6) NOT NULL,
     `updated_at` DATETIME(6) NULL,
+    `removed_at` DATETIME(6) NULL,
     UNIQUE user_id_type (`user_id`, `type`),
     INDEX user_id_created_at (`user_id`, `created_at`),
     FOREIGN KEY user_id (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -52,7 +53,7 @@ CREATE VIEW `user_product`
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;
 
 CREATE VIEW `user_product_structured`
-  (`p_id`, `p_name`, `p_type`, `p_user_id`, `p_received_user_id`, `p_description`, `p_full_description`, `p_size`, `p_status`, `p_category`, `p_created_at`, `p_updated_at`, `u_id`, `u_name`, `u_age`, `u_message`, `u_icon_image`, `u_created_at`, `u_updated_at`, `ru_id`, `ru_name`, `ru_age`, `ru_message`, `ru_icon_image`, `ru_created_at`, `ru_updated_at`) AS
+  (`p_id`, `p_name`, `p_type`, `p_user_id`, `p_received_user_id`, `p_description`, `p_full_description`, `p_size`, `p_status`, `p_category`, `p_created_at`, `p_updated_at`, `p_removed_at`, `u_id`, `u_name`, `u_age`, `u_message`, `u_icon_image`, `u_created_at`, `u_updated_at`, `ru_id`, `ru_name`, `ru_age`, `ru_message`, `ru_icon_image`, `ru_created_at`, `ru_updated_at`) AS
   SELECT p.*, u.*, ru.* FROM product AS p
     INNER JOIN user AS u ON p.user_id = u.id
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;

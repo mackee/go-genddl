@@ -3,6 +3,7 @@ package genddl
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/types"
 	"io"
@@ -28,7 +29,7 @@ type newViewMapInput struct {
 	ti    *types.Info
 }
 
-func NewViewMap(input newViewMapInput) *ViewMap {
+func NewViewMap(input newViewMapInput) (*ViewMap, error) {
 	st := input.st
 	funcs := input.funcs
 	name := input.name
@@ -36,21 +37,24 @@ func NewViewMap(input newViewMapInput) *ViewMap {
 	for _, field := range st.Fields.List {
 		t := input.ti.TypeOf(field.Type)
 		tagText := field.Tag.Value
-		cs := columnsByFields(t, input.ti, tagText, "")
+		cs, err := columnsByFields(t, input.ti, tagText, "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get columns by fields: %w", err)
+		}
 		for _, c := range cs {
 			columns = append(columns, c.name)
 		}
 	}
 	selectStatement := retrieveSelectStatementByFuncs(funcs)
 	if selectStatement == "" {
-		return nil
+		return nil, nil
 	}
 
 	return &ViewMap{
 		Name:            name,
 		Columns:         columns,
 		SelectStatement: selectStatement,
-	}
+	}, nil
 }
 
 func retrieveSelectStatementByFuncs(funcs []*ast.FuncDecl) string {

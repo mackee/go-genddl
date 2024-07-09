@@ -73,10 +73,15 @@ func Run(from string) {
 	for _, tableName := range tableNames {
 		st := tr.tables[tableName]
 		funcs := tr.funcs[st]
-		tableMap := NewTableMap(tableName, st, funcs, tablesMap, tr.ti, innerIndexDef, uniqueWithName, foreignKeyWithName)
+		tableMap, err := NewTableMap(tableName, st, funcs, tablesMap, tr.ti, innerIndexDef, uniqueWithName, foreignKeyWithName)
+		if err != nil {
+			log.Fatalf("failed to create table map: %s", err)
+		}
 		if tableMap != nil {
 			file.WriteString("\n")
-			tableMap.WriteDDL(file, dialect)
+			if err := tableMap.WriteDDL(file, dialect); err != nil {
+				log.Fatalf("failed to write DDL: %s", err)
+			}
 		}
 	}
 	viewNames := make([]string, 0, len(tr.views))
@@ -86,12 +91,15 @@ func Run(from string) {
 	sort.Strings(viewNames)
 	for _, viewName := range viewNames {
 		v := tr.views[viewName]
-		vm := NewViewMap(newViewMapInput{
+		vm, err := NewViewMap(newViewMapInput{
 			name:  viewName,
 			st:    v,
 			funcs: tr.funcs[v],
 			ti:    tr.ti,
 		})
+		if err != nil {
+			log.Fatalf("[ERROR] failed to create view map: %s", err)
+		}
 		if vm == nil {
 			log.Println("[ERROR] skip view:", viewName)
 			continue

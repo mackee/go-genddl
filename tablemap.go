@@ -1,6 +1,7 @@
 package genddl
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
@@ -20,7 +21,7 @@ type TableMap struct {
 	Tables        map[*ast.StructType]string
 }
 
-func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName, foreignKeyWithName bool) *TableMap {
+func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName, foreignKeyWithName bool) (*TableMap, error) {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
@@ -28,10 +29,12 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	tableMap.Tables = tables
 
 	for _, field := range structType.Fields.List {
-		tableMap.addColumnOrIndex(field, ti)
+		if err := tableMap.addColumnOrIndex(field, ti); err != nil {
+			return nil, fmt.Errorf("failed to add column or index: %w", err)
+		}
 	}
 
-	return tableMap
+	return tableMap, nil
 }
 
 func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerIndexDef, uniqueWithName, foreignKeyWithName bool) []indexer {
@@ -249,13 +252,11 @@ func retrieveIndexForeignKeyOptionByExpr(exprs []ast.Expr) []index.ForeignKeyOpt
 func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 	tableName := dialect.QuoteField(strings.TrimSpace(tm.Name))
 
-	_, err := io.WriteString(w, "DROP TABLE IF EXISTS "+tableName+";\n\n")
-	if err != nil {
-		return err
+	if _, err := io.WriteString(w, "DROP TABLE IF EXISTS "+tableName+";\n\n"); err != nil {
+		return fmt.Errorf("failed to write drop table string: %w", err)
 	}
-	_, err = io.WriteString(w, "CREATE TABLE "+tableName+" (\n")
-	if err != nil {
-		return err
+	if _, err := io.WriteString(w, "CREATE TABLE "+tableName+" (\n"); err != nil {
+		return fmt.Errorf("failed to write create table string: %w", err)
 	}
 
 	innerIndexes := make([]indexer, 0, len(tm.Indexes))
@@ -276,11 +277,14 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		}
 
 		columnName := dialect.QuoteField(cm.Name)
-		columnType := dialect.ToSqlType(cm)
+		columnType, err := dialect.ToSqlType(cm)
+		if err != nil {
+			return fmt.Errorf("failed to convert to sql type: %w", err)
+		}
 
 		_, err = io.WriteString(w, "    "+columnName+" "+columnType+comma)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to write column string: %w", err)
 		}
 	}
 
@@ -292,13 +296,12 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		str := sf.Index(dialect, tm.Tables)
 		_, err := io.WriteString(w, str+comma)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to write index string: %w", err)
 		}
 	}
 
 	suffix := dialect.CreateTableSuffix()
-	_, err = io.WriteString(w, ") "+suffix+";\n")
-	if err != nil {
+	if _, err := io.WriteString(w, ") "+suffix+";\n"); err != nil {
 		return err
 	}
 
@@ -310,53 +313,48 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		}
 	}
 
-	_, err = io.WriteString(w, "\n")
-	if err != nil {
+	if _, err := io.WriteString(w, "\n"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (tm *TableMap) addColumnOrIndex(field *ast.Field, ti *types.Info) {
+func (tm *TableMap) addColumnOrIndex(field *ast.Field, ti *types.Info) error {
 	if field.Tag == nil {
-		return
+		return nil
 	}
 	tv := field.Tag.Value
 
-	tm.addColumn(field, tv, ti)
+	if err := tm.addColumn(field, tv, ti); err != nil {
+		return fmt.Errorf("failed to add column: %w", err)
+	}
+	return nil
 }
 
 type ColumnMap struct {
-	Name     string
-	TypeName string
-	TagMap   map[string]string
+	Name       string
+	TypeName   string
+	IsNullable bool
+	TagMap     map[string]string
 }
 
-var supportedTypes = map[string]struct{}{
-	"time.Time":                               {},
-	"database/sql.NullBool":                   {},
-	"database/sql.NullInt16":                  {},
-	"database/sql.NullInt32":                  {},
-	"database/sql.NullInt64":                  {},
-	"database/sql.NullFloat64":                {},
-	"database/sql.NullString":                 {},
-	"database/sql.NullByte":                   {},
-	"database/sql.NullTime":                   {},
-	"github.com/go-sql-driver/mysql.NullTime": {},
-}
-
-func (tm *TableMap) addColumn(field *ast.Field, tag string, ti *types.Info) {
+func (tm *TableMap) addColumn(field *ast.Field, tag string, ti *types.Info) error {
 	t := ti.TypeOf(field.Type)
-	cs := columnsByFields(t, ti, tag, "")
+	cs, err := columnsByFields(t, ti, tag, "")
+	if err != nil {
+		return fmt.Errorf("failed to get columns by fields: %w", err)
+	}
 	for _, c := range cs {
 		tm.Columns = append(tm.Columns, &ColumnMap{
-			Name:     c.name,
-			TypeName: c.typeName,
-			TagMap:   c.tagMap,
+			Name:       c.name,
+			TypeName:   c.typeName,
+			IsNullable: c.isNullable,
+			TagMap:     c.tagMap,
 		})
 		tm.addIndex(c.tagMap)
 	}
+	return nil
 }
 
 type IndexMap struct {

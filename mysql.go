@@ -2,7 +2,6 @@ package genddl
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/mackee/go-genddl/index"
 )
@@ -17,29 +16,29 @@ type MysqlDialect struct {
 
 func (m MysqlDialect) DriverName() string { return "mysql" }
 
-func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
+func (m MysqlDialect) ToSqlType(col *ColumnMap) (string, error) {
 	column := ""
 
 	switch col.TypeName {
-	case "bool", "sql.NullBool":
+	case "bool":
 		column = "BOOLEAN"
 	case "int8":
 		column = "TINYINT"
 	case "uint8":
 		column = "TINYINT unsigned"
-	case "int", "int16", "sql.NullInt16", "int32", "sql.NullInt32", "sql.NullByte":
+	case "int", "int16", "int32":
 		column = "INTEGER"
 	case "uint16", "uint32":
 		column = "INTEGER unsigned"
-	case "int64", "sql.NullInt64":
+	case "int64":
 		column = "BIGINT"
 	case "uint64":
 		column = "BIGINT unsigned"
-	case "float64", "sql.NullFloat64":
+	case "float64":
 		column = "DOUBLE"
 	case "float32":
 		column = "FLOAT"
-	case "string", "sql.NullString":
+	case "string":
 		if _, ok := col.TagMap["text"]; ok {
 			column = "TEXT"
 		} else if _, ok := col.TagMap["mediumtext"]; ok {
@@ -54,7 +53,7 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		if m.Collate != "" {
 			column += " COLLATE " + m.Collate
 		}
-	case "time.Time", "sql.NullTime", "mysql.NullTime":
+	case "time.Time":
 		column = "DATETIME"
 		if v, ok := col.TagMap["precision"]; ok {
 			column += "(" + v + ")"
@@ -65,9 +64,11 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		} else {
 			column = "BLOB"
 		}
+	default:
+		return "", fmt.Errorf("unsupported type: %s, column=%s", col.TypeName, col.Name)
 	}
 
-	if _, ok := col.TagMap["null"]; ok || strings.HasPrefix(col.TypeName, "sql.Null") || col.TypeName == "mysql.NullTime" {
+	if _, ok := col.TagMap["null"]; ok || col.IsNullable {
 		column += " NULL"
 	} else {
 		column += " NOT NULL"
@@ -89,7 +90,7 @@ func (m MysqlDialect) ToSqlType(col *ColumnMap) string {
 		column += " AUTO_INCREMENT"
 	}
 
-	return column
+	return column, nil
 }
 
 func (m MysqlDialect) CreateTableSuffix() string {
