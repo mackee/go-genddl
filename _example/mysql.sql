@@ -57,4 +57,4 @@ CREATE VIEW `user_product_structured`
     INNER JOIN user AS u ON p.user_id = u.id
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;
 
-ALTER TABLE product ADD FOREIGN KEY user_id (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE product ADD CONSTRAINT user_id FOREIGN KEY user_id (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

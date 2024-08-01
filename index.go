@@ -84,7 +84,7 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 	case indexForeign:
 		if si.OuterForeignKey {
 			tableName := tables[si.Struct]
-			fmt.Fprintf(bs, "ALTER TABLE %s ADD ", tableName)
+			fmt.Fprintf(bs, "ALTER TABLE %s ADD CONSTRAINT %s ", tableName, joinAndStripName(si.Name()))
 		} else {
 			bs.WriteString("    ")
 		}
