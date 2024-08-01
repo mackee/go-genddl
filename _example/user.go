@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//go:generate go run ../cmd/genddl/main.go -outpath=./mysql.sql -innerindex -uniquename -foreignkeyname -tablecollate=utf8mb4_general_ci
+//go:generate go run ../cmd/genddl/main.go -outpath=./mysql.sql -innerindex -uniquename -foreignkeyname -tablecollate=utf8mb4_general_ci -outerforeignkey
 //go:generate go run ../cmd/genddl/main.go -outpath=./sqlite3.sql -driver=sqlite3
 
 type UserID uint32

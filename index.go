@@ -33,6 +33,7 @@ const (
 
 type indexer interface {
 	IsOuterOfCreateTable() bool
+	IsPlaceOnEndOfDDLFile() bool
 	Index(dialect Dialect, tables map[*ast.StructType]string) string
 }
 
@@ -45,10 +46,21 @@ type indexIdent struct {
 	InnerComplexIndex  bool
 	UniqueWithName     bool
 	ForeignKeyWithName bool
+	OuterForeignKey    bool
 }
 
 func (si indexIdent) IsOuterOfCreateTable() bool {
-	return si.Type == indexComplex && !si.InnerComplexIndex
+	if si.Type == indexComplex && !si.InnerComplexIndex {
+		return true
+	}
+	if si.Type == indexForeign && si.OuterForeignKey {
+		return true
+	}
+	return false
+}
+
+func (si indexIdent) IsPlaceOnEndOfDDLFile() bool {
+	return si.Type == indexForeign && si.OuterForeignKey
 }
 
 func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) string {
@@ -70,10 +82,16 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 			fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), tableName)
 		}
 	case indexForeign:
-		if si.ForeignKeyWithName {
-			fmt.Fprintf(bs, "    FOREIGN KEY %s (", joinAndStripName(si.Name()))
+		if si.OuterForeignKey {
+			tableName := tables[si.Struct]
+			fmt.Fprintf(bs, "ALTER TABLE %s ADD ", tableName)
 		} else {
-			bs.WriteString("    FOREIGN KEY (")
+			bs.WriteString("    ")
+		}
+		if si.ForeignKeyWithName {
+			fmt.Fprintf(bs, "FOREIGN KEY %s (", joinAndStripName(si.Name()))
+		} else {
+			bs.WriteString("FOREIGN KEY (")
 		}
 	case indexSpatial:
 		fmt.Fprintf(bs, "    SPATIAL KEY %s (", joinAndStripName(si.Name()))
@@ -135,6 +153,10 @@ func joinAndStripName(s string) string {
 type rawIndex string
 
 func (rs rawIndex) IsOuterOfCreateTable() bool {
+	return false
+}
+
+func (rs rawIndex) IsPlaceOnEndOfDDLFile() bool {
 	return false
 }
 

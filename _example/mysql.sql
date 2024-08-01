@@ -29,8 +29,7 @@ CREATE TABLE `product` (
     `updated_at` DATETIME(6) NULL,
     `removed_at` DATETIME(6) NULL,
     UNIQUE user_id_type (`user_id`, `type`),
-    INDEX user_id_created_at (`user_id`, `created_at`),
-    FOREIGN KEY user_id (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    INDEX user_id_created_at (`user_id`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
@@ -47,8 +46,8 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE VIEW `user_product`
-  (`p_id`, `u_name`, `ru_name`, `p_id`, `p_type`) AS
-  SELECT p.id, u.name, ru.name, p.id, p.type FROM product AS p
+  (`u_id`, `u_name`, `ru_name`, `p_id`, `p_type`) AS
+  SELECT u.id, u.name, ru.name, p.id, p.type FROM product AS p
     INNER JOIN user AS u ON p.user_id = u.id
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;
 
@@ -58,3 +57,4 @@ CREATE VIEW `user_product_structured`
     INNER JOIN user AS u ON p.user_id = u.id
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;
 
+ALTER TABLE product ADD FOREIGN KEY user_id (`user_id`) REFERENCES user(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

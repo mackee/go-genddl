@@ -14,18 +14,60 @@ import (
 )
 
 type TableMap struct {
-	Name          string
-	Columns       []*ColumnMap
-	ColumnIndexes []*IndexMap
-	Indexes       []indexer
-	Tables        map[*ast.StructType]string
+	Name                string
+	Columns             []*ColumnMap
+	ColumnIndexes       []*IndexMap
+	Indexes             []indexer
+	Tables              map[*ast.StructType]string
+	EndOfDDLFileIndexes []indexer
 }
 
-func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, innerIndexDef, uniqueWithName, foreignKeyWithName bool) (*TableMap, error) {
+type tableMapOption struct {
+	innerIndexDef      bool
+	uniqueWithName     bool
+	foreignKeyWithName bool
+	outerForeignKey    bool
+}
+
+type tableMapOptionFunc func(*tableMapOption)
+
+type tableMapOptionFuncs []tableMapOptionFunc
+
+func (fs tableMapOptionFuncs) apply(o *tableMapOption) {
+	for _, f := range fs {
+		f(o)
+	}
+}
+
+func withInnerIndexDef() tableMapOptionFunc {
+	return func(o *tableMapOption) {
+		o.innerIndexDef = true
+	}
+}
+
+func withUniqueWithName() tableMapOptionFunc {
+	return func(o *tableMapOption) {
+		o.uniqueWithName = true
+	}
+}
+
+func withForeignKeyWithName() tableMapOptionFunc {
+	return func(o *tableMapOption) {
+		o.foreignKeyWithName = true
+	}
+}
+
+func withOuterForeignKey() tableMapOptionFunc {
+	return func(o *tableMapOption) {
+		o.outerForeignKey = true
+	}
+}
+
+func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl, tables map[*ast.StructType]string, ti *types.Info, opts *tableMapOption) (*TableMap, error) {
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
-	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, innerIndexDef, uniqueWithName, foreignKeyWithName)
+	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, opts)
 	tableMap.Tables = tables
 
 	for _, field := range structType.Fields.List {
@@ -37,7 +79,7 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	return tableMap, nil
 }
 
-func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerIndexDef, uniqueWithName, foreignKeyWithName bool) []indexer {
+func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tableMapOption) []indexer {
 	var f *ast.FuncDecl
 	for _, funcDecl := range funcs {
 		if funcDecl.Name.String() != indexFuncName {
@@ -103,14 +145,14 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerInde
 						Struct:         me,
 						Type:           indexUnique,
 						Column:         retrieveIndexColumnByExpr(n.Args),
-						UniqueWithName: uniqueWithName,
+						UniqueWithName: opts.uniqueWithName,
 					}
 				case "Complex":
 					si = indexIdent{
 						Struct:            me,
 						Type:              indexComplex,
 						Column:            retrieveIndexColumnByExpr(n.Args),
-						InnerComplexIndex: innerIndexDef,
+						InnerComplexIndex: opts.innerIndexDef,
 					}
 				case "ForeignKey":
 					options := make([]index.ForeignKeyOption, 0)
@@ -123,21 +165,22 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, innerInde
 						Column:             retrieveIndexColumnByExpr([]ast.Expr{n.Args[0]}),
 						References:         retrieveIndexColumnByExpr([]ast.Expr{n.Args[1]}),
 						ForeignKeyOptions:  options,
-						ForeignKeyWithName: foreignKeyWithName,
+						ForeignKeyWithName: opts.foreignKeyWithName,
+						OuterForeignKey:    opts.outerForeignKey,
 					}
 				case "Spatial":
 					si = indexIdent{
 						Struct:            me,
 						Type:              indexSpatial,
 						Column:            retrieveIndexColumnByExpr(n.Args),
-						InnerComplexIndex: innerIndexDef,
+						InnerComplexIndex: opts.innerIndexDef,
 					}
 				case "Fulltext":
 					si = indexIdent{
 						Struct:            me,
 						Type:              indexFulltext,
 						Column:            retrieveIndexColumnByExpr(n.Args),
-						InnerComplexIndex: innerIndexDef,
+						InnerComplexIndex: opts.innerIndexDef,
 					}
 				default:
 					break OUTER
@@ -305,7 +348,12 @@ func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
 		return err
 	}
 
+	tm.EndOfDDLFileIndexes = make([]indexer, 0, len(outerIndexes))
 	for _, sf := range outerIndexes {
+		if sf.IsPlaceOnEndOfDDLFile() {
+			tm.EndOfDDLFileIndexes = append(tm.EndOfDDLFileIndexes, sf)
+			continue
+		}
 		str := sf.Index(dialect, tm.Tables)
 		_, err := io.WriteString(w, str+";\n")
 		if err != nil {
