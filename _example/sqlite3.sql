@@ -47,8 +47,8 @@ CREATE TABLE "user" (
 ) ;
 
 CREATE VIEW "user_product"
-  ("p_id", "u_name", "ru_name", "p_id", "p_type") AS
-  SELECT p.id, u.name, ru.name, p.id, p.type FROM product AS p
+  ("u_id", "u_name", "ru_name", "p_id", "p_type") AS
+  SELECT u.id, u.name, ru.name, p.id, p.type FROM product AS p
     INNER JOIN user AS u ON p.user_id = u.id
     LEFT JOIN user AS ru ON p.received_user_id = ru.id;
 
