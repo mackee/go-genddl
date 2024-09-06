@@ -82,9 +82,15 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 			fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), tableName)
 		}
 	case indexForeign:
+		tableName := tables[si.Struct]
+		constraintName := joinAndStripName(strings.Join([]string{"fk", tableName, si.Name()}, "_"))
 		if si.OuterForeignKey {
-			tableName := tables[si.Struct]
-			fmt.Fprintf(bs, "ALTER TABLE %s ADD CONSTRAINT %s ", tableName, joinAndStripName(si.Name()))
+			fmt.Fprintf(
+				bs,
+				"ALTER TABLE `%s` ADD CONSTRAINT `%s` ",
+				tableName,
+				constraintName,
+			)
 		} else {
 			bs.WriteString("    ")
 		}
