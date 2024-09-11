@@ -65,7 +65,7 @@ func (m Sqlite3Dialect) QuoteField(field string) string {
 func (m Sqlite3Dialect) ForeignKey(option index.ForeignKeyOption) string {
 	switch option {
 	case index.ForeignKeyDeleteRestrict:
-		return "ON DELETE RISTRICT"
+		return "ON DELETE RESTRICT"
 	case index.ForeignKeyDeleteCascade:
 		return "ON DELETE CASCADE"
 	case index.ForeignKeyDeleteSetNull:
@@ -75,7 +75,7 @@ func (m Sqlite3Dialect) ForeignKey(option index.ForeignKeyOption) string {
 	case index.ForeignKeyDeleteNoAction:
 		return "ON DELETE NO ACTION"
 	case index.ForeignKeyUpdateRestrict:
-		return "ON UPDATE RISTRICT"
+		return "ON UPDATE RESTRICT"
 	case index.ForeignKeyUpdateCascade:
 		return "ON UPDATE CASCADE"
 	case index.ForeignKeyUpdateSetNull:
