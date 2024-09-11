@@ -27,6 +27,7 @@ type tableMapOption struct {
 	uniqueWithName     bool
 	foreignKeyWithName bool
 	outerForeignKey    bool
+	outerUniqueKey     bool
 	withoutDropTable   bool
 }
 
@@ -61,6 +62,12 @@ func withForeignKeyWithName() tableMapOptionFunc {
 func withOuterForeignKey() tableMapOptionFunc {
 	return func(o *tableMapOption) {
 		o.outerForeignKey = true
+	}
+}
+
+func withOuterUniqueKey() tableMapOptionFunc {
+	return func(o *tableMapOption) {
+		o.outerUniqueKey = true
 	}
 }
 
@@ -147,6 +154,7 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tab
 						Type:           indexUnique,
 						Column:         retrieveIndexColumnByExpr(n.Args),
 						UniqueWithName: opts.uniqueWithName,
+						OuterUniqueKey: opts.outerUniqueKey,
 					}
 				case "Complex":
 					si = indexIdent{

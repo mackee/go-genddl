@@ -7,7 +7,7 @@ import (
 	"github.com/mackee/go-genddl/index"
 )
 
-//go:generate go run ../../cmd/genddl/main.go -outpath=./postgresql.sql -outerforeignkey -withoutdroptable -driver=pg
+//go:generate go run ../../cmd/genddl/main.go -outpath=./postgresql.sql -outerforeignkey -withoutdroptable -outeruniquekey -driver=pg
 
 type UserID int64
 
@@ -100,4 +100,14 @@ func (s Product) _schemaIndex(methods index.Methods) []index.Definition {
 		methods.Complex(s.UserID, s.CreatedAt),
 		methods.ForeignKey(s.UserID, User{}.ID, index.ForeignKeyDeleteCascade, index.ForeignKeyUpdateCascade),
 	}
+}
+
+//genddl:table statement
+type Statement struct {
+	ID        int64  `db:"id,primarykey,autoincrement"`
+	Value     string `db:"value"`
+	Embedding string `db:"embedding,def=vector(3)"`
+
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }

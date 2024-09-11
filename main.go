@@ -37,6 +37,7 @@ func Run(from string) {
 	flag.StringVar(&tableCollate, "tablecollate", "", "Provides a collate for the definition of tables.")
 	flag.BoolVar(&tableMapOptionArgs.foreignKeyWithName, "foreignkeyname", false, "Provides a name for the definition of a foreign-key.")
 	flag.BoolVar(&tableMapOptionArgs.outerForeignKey, "outerforeignkey", false, "Placement of foreign key definition. If this specified, the definition was placement end of DDL file.")
+	flag.BoolVar(&tableMapOptionArgs.outerUniqueKey, "outeruniquekey", false, "Placement of unique key definition. If this specified, the definition was placement outer of CREATE TABLE.")
 	flag.BoolVar(&tableMapOptionArgs.withoutDropTable, "withoutdroptable", false, "If this specified, the DDL file does not contain DROP TABLE statement.")
 
 	flag.Parse()

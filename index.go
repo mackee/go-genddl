@@ -47,6 +47,7 @@ type indexIdent struct {
 	UniqueWithName     bool
 	ForeignKeyWithName bool
 	OuterForeignKey    bool
+	OuterUniqueKey     bool
 }
 
 func (si indexIdent) IsOuterOfCreateTable() bool {
@@ -54,6 +55,9 @@ func (si indexIdent) IsOuterOfCreateTable() bool {
 		return true
 	}
 	if si.Type == indexForeign && si.OuterForeignKey {
+		return true
+	}
+	if si.Type == indexUnique && si.OuterUniqueKey {
 		return true
 	}
 	return false
@@ -67,10 +71,15 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 	bs := &bytes.Buffer{}
 	switch si.Type {
 	case indexUnique:
-		if si.UniqueWithName {
-			fmt.Fprintf(bs, "    UNIQUE %s (", joinAndStripName(si.Name()))
+		if si.OuterUniqueKey {
+			tableName := tables[si.Struct]
+			fmt.Fprintf(bs, "CREATE UNIQUE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), dialect.QuoteField(tableName))
 		} else {
-			bs.WriteString("    UNIQUE (")
+			if si.UniqueWithName {
+				fmt.Fprintf(bs, "    UNIQUE %s (", joinAndStripName(si.Name()))
+			} else {
+				bs.WriteString("    UNIQUE (")
+			}
 		}
 	case indexPrimaryKey:
 		bs.WriteString("    PRIMARY KEY (")
@@ -79,7 +88,7 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 			fmt.Fprintf(bs, "    INDEX %s (", joinAndStripName(si.Name()))
 		} else {
 			tableName := tables[si.Struct]
-			fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), tableName)
+			fmt.Fprintf(bs, "CREATE INDEX %s ON %s (", tableName+"_"+joinAndStripName(si.Name()), dialect.QuoteField(tableName))
 		}
 	case indexForeign:
 		tableName := tables[si.Struct]
