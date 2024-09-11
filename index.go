@@ -87,9 +87,9 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 		if si.OuterForeignKey {
 			fmt.Fprintf(
 				bs,
-				"ALTER TABLE `%s` ADD CONSTRAINT `%s` ",
-				tableName,
-				constraintName,
+				"ALTER TABLE %s ADD CONSTRAINT %s ",
+				dialect.QuoteField(tableName),
+				dialect.QuoteField(constraintName),
 			)
 		} else {
 			bs.WriteString("    ")
@@ -204,7 +204,7 @@ func (c unresolvedIndexColumn) Column(dialect Dialect, me *ast.StructType, table
 		return bareColumn, nil
 	}
 	if tableName, ok := tables[c.Struct]; ok {
-		return tableName + "(" + bareColumn + ")", nil
+		return dialect.QuoteField(tableName) + "(" + bareColumn + ")", nil
 	}
 
 	return "", fmt.Errorf("specified column is not define table struct: %s.%s", c.StructName, c.Field.Names[0].Name)
