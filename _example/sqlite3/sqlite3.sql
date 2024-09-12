@@ -29,7 +29,7 @@ CREATE TABLE "product" (
     UNIQUE ("user_id", "type"),
     FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
-CREATE INDEX product_user_id_created_at ON product ("user_id", "created_at");
+CREATE INDEX product_user_id_created_at ON "product" ("user_id", "created_at");
 
 
 DROP TABLE IF EXISTS "user";
