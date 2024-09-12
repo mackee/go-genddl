@@ -1,8 +1,6 @@
 # genddl
 Generate RDB DDL by go struct
 
-**THIS IS A ALPHA QUALITY RELEASE. API MAY CHANGE WITHOUT NOTICE.**
-
 ## Install
 
 ```
@@ -21,7 +19,7 @@ Look [example](https://github.com/mackee/go-genddl/blob/master/_example) sources
 
 //go:generate genddl -outpath=./mysql.sql -driver=mysql
 
-//+table: person
+//genddl:table person
 type Person struct { //=> CREATE TABLE `person` (
 	ID uint64 `db:"id,primarykey,autoincrement"` //=> `id`            BIGINT unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	Name string `db:"name,unique"`               //=> `name`          VARCHAR(191) NOT NULL UNIQUE,
@@ -56,10 +54,10 @@ import (
 	"github.com/mackee/go-genddl/index"
 )
 
-//+table:team
+//genddl:table team
 type Team struct { ... }
 
-//+table:person
+//genddl:table person
 type Person struct { ... }
 
 func (s Person) _schemaIndex(methods index.Methods) []index.Definition {
@@ -71,4 +69,30 @@ func (s Person) _schemaIndex(methods index.Methods) []index.Definition {
 		methods.Complex(s.Age, s.Name),         //=> CREATE INDEX person_age_name (`age`, `name`);
 	}
 }
+```
+
+### CLI Options
+
+```
+Usage of genddl:
+  -driver string
+        target driver name. support mysql, pg, sqlite3 (default "mysql")
+  -foreignkeyname
+        Provides a name for the definition of a foreign-key.
+  -innerindex create table
+        Placement of index definition. If this specified, the definition was placement inner of create table
+  -outerforeignkey
+        Placement of foreign key definition. If this specified, the definition was placement end of DDL file.
+  -outeruniquekey
+        Placement of unique key definition. If this specified, the definition was placement outer of CREATE TABLE.
+  -outpath string
+        schema target path
+  -schemadir string
+        schema declaretion directory
+  -tablecollate string
+        Provides a collate for the definition of tables.
+  -uniquename
+        Provides a name for the definition of a unique index.
+  -withoutdroptable
+        If this specified, the DDL file does not contain DROP TABLE statement.
 ```
