@@ -31,12 +31,14 @@ func Run(from string) {
 	tableMapOptionArgs := &tableMapOption{}
 	flag.StringVar(&schemadir, "schemadir", fromdir, "schema declaretion directory")
 	flag.StringVar(&outpath, "outpath", "", "schema target path")
-	flag.StringVar(&driverName, "driver", "mysql", "target driver")
+	flag.StringVar(&driverName, "driver", "mysql", "target driver name. support mysql, pg, sqlite3")
 	flag.BoolVar(&tableMapOptionArgs.innerIndexDef, "innerindex", false, "Placement of index definition. If this specified, the definition was placement inner of `create table`")
 	flag.BoolVar(&tableMapOptionArgs.uniqueWithName, "uniquename", false, "Provides a name for the definition of a unique index.")
 	flag.StringVar(&tableCollate, "tablecollate", "", "Provides a collate for the definition of tables.")
 	flag.BoolVar(&tableMapOptionArgs.foreignKeyWithName, "foreignkeyname", false, "Provides a name for the definition of a foreign-key.")
 	flag.BoolVar(&tableMapOptionArgs.outerForeignKey, "outerforeignkey", false, "Placement of foreign key definition. If this specified, the definition was placement end of DDL file.")
+	flag.BoolVar(&tableMapOptionArgs.outerUniqueKey, "outeruniquekey", false, "Placement of unique key definition. If this specified, the definition was placement outer of CREATE TABLE.")
+	flag.BoolVar(&tableMapOptionArgs.withoutDropTable, "withoutdroptable", false, "If this specified, the DDL file does not contain DROP TABLE statement.")
 
 	flag.Parse()
 
@@ -44,6 +46,12 @@ func Run(from string) {
 	switch driverName {
 	case "mysql":
 		dialect = MysqlDialect{Collate: tableCollate}
+	case "pg":
+		dialect = PostgresqlDialect{Collate: tableCollate}
+		// It is not supported by PostgreSQL that foreign key definition with name
+		tableMapOptionArgs.foreignKeyWithName = false
+		// It is not supported by PostgreSQL that unique index definition with name
+		tableMapOptionArgs.uniqueWithName = false
 	case "sqlite3":
 		dialect = Sqlite3Dialect{}
 		// It is not supported by SQLite that placement of index definition inner CREATE TABLE
@@ -83,7 +91,7 @@ func Run(from string) {
 		}
 		if tableMap != nil {
 			file.WriteString("\n")
-			if err := tableMap.WriteDDL(file, dialect); err != nil {
+			if err := tableMap.WriteDDL(file, dialect, tableMapOptionArgs); err != nil {
 				log.Fatalf("failed to write DDL: %s", err)
 			}
 			endOfDDLFileIndexes = append(endOfDDLFileIndexes, tableMap.EndOfDDLFileIndexes...)

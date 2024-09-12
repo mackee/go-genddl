@@ -27,6 +27,8 @@ type tableMapOption struct {
 	uniqueWithName     bool
 	foreignKeyWithName bool
 	outerForeignKey    bool
+	outerUniqueKey     bool
+	withoutDropTable   bool
 }
 
 type tableMapOptionFunc func(*tableMapOption)
@@ -60,6 +62,12 @@ func withForeignKeyWithName() tableMapOptionFunc {
 func withOuterForeignKey() tableMapOptionFunc {
 	return func(o *tableMapOption) {
 		o.outerForeignKey = true
+	}
+}
+
+func withOuterUniqueKey() tableMapOptionFunc {
+	return func(o *tableMapOption) {
+		o.outerUniqueKey = true
 	}
 }
 
@@ -146,6 +154,7 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tab
 						Type:           indexUnique,
 						Column:         retrieveIndexColumnByExpr(n.Args),
 						UniqueWithName: opts.uniqueWithName,
+						OuterUniqueKey: opts.outerUniqueKey,
 					}
 				case "Complex":
 					si = indexIdent{
@@ -292,11 +301,13 @@ func retrieveIndexForeignKeyOptionByExpr(exprs []ast.Expr) []index.ForeignKeyOpt
 	return options
 }
 
-func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect) error {
+func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect, opts *tableMapOption) error {
 	tableName := dialect.QuoteField(strings.TrimSpace(tm.Name))
 
-	if _, err := io.WriteString(w, "DROP TABLE IF EXISTS "+tableName+";\n\n"); err != nil {
-		return fmt.Errorf("failed to write drop table string: %w", err)
+	if !opts.withoutDropTable {
+		if _, err := io.WriteString(w, "DROP TABLE IF EXISTS "+tableName+";\n\n"); err != nil {
+			return fmt.Errorf("failed to write drop table string: %w", err)
+		}
 	}
 	if _, err := io.WriteString(w, "CREATE TABLE "+tableName+" (\n"); err != nil {
 		return fmt.Errorf("failed to write create table string: %w", err)

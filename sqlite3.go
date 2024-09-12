@@ -71,7 +71,7 @@ func (m Sqlite3Dialect) ForeignKey(option index.ForeignKeyOption) string {
 	case index.ForeignKeyDeleteSetNull:
 		return "ON DELETE SET NULL"
 	case index.ForeignKeyDeleteSetDefault:
-		return "ON DELETE DEFAULT"
+		return "ON DELETE SET DEFAULT"
 	case index.ForeignKeyDeleteNoAction:
 		return "ON DELETE NO ACTION"
 	case index.ForeignKeyUpdateRestrict:
@@ -81,7 +81,7 @@ func (m Sqlite3Dialect) ForeignKey(option index.ForeignKeyOption) string {
 	case index.ForeignKeyUpdateSetNull:
 		return "ON UPDATE SET NULL"
 	case index.ForeignKeyUpdateSetDefault:
-		return "ON UPDATE DEFAULT"
+		return "ON UPDATE SET DEFAULT"
 	case index.ForeignKeyUpdateNoAction:
 		return "ON UPDATE NO ACTION"
 	}

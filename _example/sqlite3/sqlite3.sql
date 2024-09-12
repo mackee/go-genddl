@@ -6,9 +6,7 @@ CREATE TABLE "location" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "place" GEOMETRY NOT NULL,
-    SPATIAL KEY place ("place"),
-    FULLTEXT KEY description ("description")
+    "place" BLOB NOT NULL
 ) ;
 
 
@@ -29,9 +27,9 @@ CREATE TABLE "product" (
     "updated_at" DATETIME NULL,
     "removed_at" DATETIME NULL,
     UNIQUE ("user_id", "type"),
-    FOREIGN KEY ("user_id") REFERENCES user("id") ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
-CREATE INDEX product_user_id_created_at ON product ("user_id", "created_at");
+CREATE INDEX product_user_id_created_at ON "product" ("user_id", "created_at");
 
 
 DROP TABLE IF EXISTS "user";
