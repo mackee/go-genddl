@@ -29,7 +29,11 @@ func (m Sqlite3Dialect) ToSqlType(col *ColumnMap) (string, error) {
 			column = "BLOB"
 		}
 	default:
-		return "", fmt.Errorf("unsupported types: %s, column=%s", col.TypeName, col.Name)
+		if v, ok := col.TagMap["type"]; ok {
+			column = v
+		} else {
+			return "", fmt.Errorf("unsupported types: %s, column=%s", col.TypeName, col.Name)
+		}
 	}
 
 	if _, ok := col.TagMap["null"]; ok || col.IsNullable {
