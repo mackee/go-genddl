@@ -31,7 +31,7 @@ func Run(from string) {
 	tableMapOptionArgs := &tableMapOption{}
 	flag.StringVar(&schemadir, "schemadir", fromdir, "schema declaretion directory")
 	flag.StringVar(&outpath, "outpath", "", "schema target path")
-	flag.StringVar(&driverName, "driver", "mysql", "target driver name. support mysql, pg, sqlite3")
+	flag.StringVar(&driverName, "driver", "mysql", "target driver name. support mysql, pg, sqlite3, duckdb")
 	flag.BoolVar(&tableMapOptionArgs.innerIndexDef, "innerindex", false, "Placement of index definition. If this specified, the definition was placement inner of `create table`")
 	flag.BoolVar(&tableMapOptionArgs.uniqueWithName, "uniquename", false, "Provides a name for the definition of a unique index.")
 	flag.StringVar(&tableCollate, "tablecollate", "", "Provides a collate for the definition of tables.")
@@ -59,6 +59,13 @@ func Run(from string) {
 		// It is not supported by SQLite that unique index definition with name
 		tableMapOptionArgs.uniqueWithName = false
 		// It is not supported by SQLite that foreign key definition placement outer of CREATE TABLE
+		tableMapOptionArgs.outerForeignKey = false
+	case "duckdb":
+		dialect = DuckDBDialect{}
+		tableMapOptionArgs.innerIndexDef = false
+		tableMapOptionArgs.uniqueWithName = false
+		tableMapOptionArgs.foreignKeyWithName = false
+		// It is not supported by DuckDB that foreign key definition placement outer of CREATE TABLE
 		tableMapOptionArgs.outerForeignKey = false
 	default:
 		log.Fatalf("undefined driver name: %s", driverName)
