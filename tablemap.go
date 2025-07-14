@@ -304,6 +304,18 @@ func retrieveIndexForeignKeyOptionByExpr(exprs []ast.Expr) []index.ForeignKeyOpt
 func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect, opts *tableMapOption) error {
 	tableName := dialect.QuoteField(strings.TrimSpace(tm.Name))
 
+	if bds, ok := dialect.(DialectAddBeforeDefinitionStatement); ok {
+		for _, col := range tm.Columns {
+			stmt := bds.BeforeDefinitionStatement(tm, col)
+			if stmt != "" {
+				if _, err := io.WriteString(w, stmt+"\n"); err != nil {
+					return fmt.Errorf("failed to write before definition statement: %w", err)
+				}
+			}
+
+		}
+	}
+
 	if !opts.withoutDropTable {
 		if _, err := io.WriteString(w, "DROP TABLE IF EXISTS "+tableName+";\n\n"); err != nil {
 			return fmt.Errorf("failed to write drop table string: %w", err)
@@ -396,6 +408,7 @@ type ColumnMap struct {
 	TypeName   string
 	IsNullable bool
 	TagMap     map[string]string
+	TableMap   *TableMap
 }
 
 func (tm *TableMap) addColumn(field *ast.Field, tag string, ti *types.Info) error {
@@ -410,6 +423,7 @@ func (tm *TableMap) addColumn(field *ast.Field, tag string, ti *types.Info) erro
 			TypeName:   c.typeName,
 			IsNullable: c.isNullable,
 			TagMap:     c.tagMap,
+			TableMap:   tm,
 		})
 		tm.addIndex(c.tagMap)
 	}
@@ -442,6 +456,14 @@ func (tm *TableMap) addIndex(tagMap map[string]string) {
 	indexMap.TagMap = tagMap
 
 	tm.ColumnIndexes = append(tm.ColumnIndexes, indexMap)
+}
+
+type SequenceMap struct {
+	Name      string
+	Start     int64
+	Increment int64
+	MaxValue  int64
+	Cycle     bool
 }
 
 func parseTag(v string) map[string]string {

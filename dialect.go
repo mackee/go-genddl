@@ -9,3 +9,8 @@ type Dialect interface {
 	DriverName() string
 	ForeignKey(index.ForeignKeyOption) string
 }
+
+type DialectAddBeforeDefinitionStatement interface {
+	Dialect
+	BeforeDefinitionStatement(tm *TableMap, cm *ColumnMap) string
+}
