@@ -33,8 +33,8 @@ func TestViewMap(t *testing.T) {
 	}
 
 	expect := "CREATE VIEW `user_product`\n" +
-		"  (`p_id`, `u_name`, `ru_name`, `p_id`, `p_type`) AS\n" +
-		"  SELECT p.id, u.name, ru.name, p.id, p.type FROM product AS p\n" +
+		"  (`u_id`, `u_name`, `ru_name`, `p_id`, `p_type`) AS\n" +
+		"  SELECT u.id, u.name, ru.name, p.id, p.type FROM product AS p\n" +
 		"    INNER JOIN user AS u ON p.user_id = u.id\n" +
 		"    LEFT JOIN user AS ru ON p.received_user_id = ru.id;\n\n"
 
