@@ -126,15 +126,15 @@ func (si indexIdent) Index(dialect Dialect, tables map[*ast.StructType]string) s
 
 	if si.Type == indexForeign {
 		bs.WriteString(" REFERENCES ")
-		if len(si.References) == 0 {
-			log.Fatalf("[ERROR] specified references column is invalid")
+		refTable, ok := tables[si.References[0].TableStruct()]
+		if !ok {
+			log.Fatalf("[ERROR] foreign key of table %s references a struct that is not a table", tables[si.Struct])
 		}
-		references, err := si.References[0].Column(dialect, si.Struct, tables)
-		if err != nil {
-			log.Fatalf("[ERROR] cannot resolve foreign references column error: %s", err)
+		references := make([]string, 0, len(si.References))
+		for _, ref := range si.References {
+			references = append(references, dialect.QuoteField(ref.ColumnName()))
 		}
-		bs.WriteString(references)
-		bs.WriteString(" ")
+		fmt.Fprintf(bs, "%s(%s) ", dialect.QuoteField(refTable), strings.Join(references, ", "))
 
 		var options []string
 		for _, option := range si.ForeignKeyOptions {
@@ -182,6 +182,7 @@ func (rs rawIndex) Index(dialect Dialect, tables map[*ast.StructType]string) str
 type indexColumn interface {
 	Column(dialect Dialect, me *ast.StructType, tables map[*ast.StructType]string) (string, error)
 	ColumnName() string
+	TableStruct() *ast.StructType
 }
 
 type unresolvedIndexColumn struct {
@@ -201,6 +202,10 @@ func (c unresolvedIndexColumn) ColumnName() string {
 	info := strings.SplitN(tag.Get("db"), ",", 2)
 	columnName := info[0]
 	return columnName
+}
+
+func (c unresolvedIndexColumn) TableStruct() *ast.StructType {
+	return c.Struct
 }
 
 func (c unresolvedIndexColumn) bareColumn(dialect Dialect) string {

@@ -29,9 +29,13 @@ func TestTableMap__WriteDDL(t *testing.T) {
 	for tableName, st := range tr.tables {
 		tablesRev[st] = tableName
 	}
-	tm := NewTableMap(hasIndexTableName, product, funcs, tablesRev, tr.ti, false, false, false)
+	opts := &tableMapOption{}
+	tm, err := NewTableMap(hasIndexTableName, product, funcs, tablesRev, tr.ti, opts)
+	if err != nil {
+		t.Fatalf("unexpected error on NewTableMap: %s", err)
+	}
 	bs := &bytes.Buffer{}
-	err = tm.WriteDDL(bs, MysqlDialect{})
+	err = tm.WriteDDL(bs, MysqlDialect{}, opts)
 	if err != nil {
 		t.Errorf("unexpected error on WriteDDL: %s", err)
 	}

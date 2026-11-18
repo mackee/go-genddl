@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"go/types"
 	"io"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -75,7 +76,11 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	tableMap := new(TableMap)
 	tableMap.Name = name
 
-	tableMap.Indexes = retrieveIndexesByFuncs(funcs, structType, opts)
+	indexes, err := retrieveIndexesByFuncs(funcs, structType, opts)
+	if err != nil {
+		return nil, fmt.Errorf("table %s: %w", name, err)
+	}
+	tableMap.Indexes = indexes
 	tableMap.Tables = tables
 
 	for _, field := range structType.Fields.List {
@@ -87,7 +92,7 @@ func NewTableMap(name string, structType *ast.StructType, funcs []*ast.FuncDecl,
 	return tableMap, nil
 }
 
-func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tableMapOption) []indexer {
+func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tableMapOption) ([]indexer, error) {
 	var f *ast.FuncDecl
 	for _, funcDecl := range funcs {
 		if funcDecl.Name.String() != indexFuncName {
@@ -111,7 +116,7 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tab
 		f = funcDecl
 	}
 	if f == nil {
-		return nil
+		return nil, nil
 	}
 	body := f.Body
 	var rt *ast.ReturnStmt
@@ -164,16 +169,16 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tab
 						InnerComplexIndex: opts.innerIndexDef,
 					}
 				case "ForeignKey":
-					options := make([]index.ForeignKeyOption, 0)
-					if len(n.Args) >= 2 {
-						options = retrieveIndexForeignKeyOptionByExpr(n.Args[2:])
+					columns, references, err := retrieveForeignKeyColumns(n.Args[0], n.Args[1])
+					if err != nil {
+						return nil, err
 					}
 					si = indexIdent{
 						Struct:             me,
 						Type:               indexForeign,
-						Column:             retrieveIndexColumnByExpr([]ast.Expr{n.Args[0]}),
-						References:         retrieveIndexColumnByExpr([]ast.Expr{n.Args[1]}),
-						ForeignKeyOptions:  options,
+						Column:             columns,
+						References:         references,
+						ForeignKeyOptions:  retrieveIndexForeignKeyOptionByExpr(n.Args[2:]),
 						ForeignKeyWithName: opts.foreignKeyWithName,
 						OuterForeignKey:    opts.outerForeignKey,
 					}
@@ -205,7 +210,48 @@ func retrieveIndexesByFuncs(funcs []*ast.FuncDecl, me *ast.StructType, opts *tab
 			}
 		}
 	}
-	return sis
+	return sis, nil
+}
+
+func retrieveForeignKeyColumns(columnArg, referenceArg ast.Expr) ([]indexColumn, []indexColumn, error) {
+	columnExprs := foreignKeyColumnExprs(columnArg)
+	referenceExprs := foreignKeyColumnExprs(referenceArg)
+	if len(columnExprs) == 0 {
+		return nil, nil, fmt.Errorf("foreign key has no columns")
+	}
+	if len(columnExprs) != len(referenceExprs) {
+		return nil, nil, fmt.Errorf("foreign key has %d columns but %d reference columns", len(columnExprs), len(referenceExprs))
+	}
+	columns := retrieveIndexColumnByExpr(columnExprs)
+	references := retrieveIndexColumnByExpr(referenceExprs)
+	if len(columns) != len(columnExprs) {
+		return nil, nil, fmt.Errorf("foreign key has a column that does not resolve to a field of a table struct")
+	}
+	if len(references) != len(referenceExprs) {
+		return nil, nil, fmt.Errorf("foreign key has a reference column that does not resolve to a field of a table struct")
+	}
+	refStruct := references[0].TableStruct()
+	for _, r := range references[1:] {
+		if r.TableStruct() != refStruct {
+			return nil, nil, fmt.Errorf("foreign key reference columns span more than one struct")
+		}
+	}
+	return columns, references, nil
+}
+
+func foreignKeyColumnExprs(expr ast.Expr) []ast.Expr {
+	call, ok := expr.(*ast.CallExpr)
+	if !ok {
+		return []ast.Expr{expr}
+	}
+	se, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return []ast.Expr{expr}
+	}
+	if x, ok := se.X.(*ast.Ident); !ok || x.Name != "index" || se.Sel.Name != "Columns" {
+		return []ast.Expr{expr}
+	}
+	return call.Args
 }
 
 func retrieveIndexColumnByExpr(exprs []ast.Expr) []indexColumn {
@@ -266,6 +312,9 @@ OUTER:
 					break
 				}
 			}
+			if selField == nil {
+				log.Fatalf("[ERROR] index column %s.%s is not a field declared on its own line in the struct", structName, fieldName)
+			}
 			column := unresolvedIndexColumn{
 				StructName: structName,
 				Struct:     st,
@@ -299,6 +348,20 @@ func retrieveIndexForeignKeyOptionByExpr(exprs []ast.Expr) []index.ForeignKeyOpt
 		}
 	}
 	return options
+}
+
+func (tm *TableMap) inlineForeignKeyReferences() []string {
+	var refs []string
+	for _, idx := range tm.Indexes {
+		si, ok := idx.(indexIdent)
+		if !ok || si.Type != indexForeign || si.OuterForeignKey {
+			continue
+		}
+		if ref, ok := tm.Tables[si.References[0].TableStruct()]; ok {
+			refs = append(refs, ref)
+		}
+	}
+	return refs
 }
 
 func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect, opts *tableMapOption) error {

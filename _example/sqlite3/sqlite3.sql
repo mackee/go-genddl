@@ -10,6 +10,19 @@ CREATE TABLE "location" (
 ) ;
 
 
+DROP TABLE IF EXISTS "user";
+
+CREATE TABLE "user" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL UNIQUE,
+    "age" INTEGER NULL,
+    "message" TEXT NULL,
+    "icon_image" BLOB NOT NULL,
+    "created_at" DATETIME NOT NULL,
+    "updated_at" DATETIME NULL
+) ;
+
+
 DROP TABLE IF EXISTS "product";
 
 CREATE TABLE "product" (
@@ -30,19 +43,6 @@ CREATE TABLE "product" (
     FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
 CREATE INDEX product_user_id_created_at ON "product" ("user_id", "created_at");
-
-
-DROP TABLE IF EXISTS "user";
-
-CREATE TABLE "user" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "name" TEXT NOT NULL UNIQUE,
-    "age" INTEGER NULL,
-    "message" TEXT NULL,
-    "icon_image" BLOB NOT NULL,
-    "created_at" DATETIME NOT NULL,
-    "updated_at" DATETIME NULL
-) ;
 
 CREATE VIEW "user_product"
   ("u_id", "u_name", "ru_name", "p_id", "p_type") AS

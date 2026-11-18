@@ -66,10 +66,18 @@ func (s Person) _schemaIndex(methods index.Methods) []index.Definition {
 		methods.Unique(s.UserCode, s.Type),     //=> UNIQUE (`usercode`, `type`),
 		methods.ForeignKey(s.TeamID, Team{}.ID, index.ForeignKeyDeleteCascade, index.ForeignKeyUpdateSetDefault),
 		    //=> FOREGIN KEY (`team_id`) REFERENCES team(`id`) ON DELETE CASCADE ON UPDATE SET DEFAULT
+		methods.ForeignKey(
+			index.Columns(s.OrganizationID, s.TeamID),
+			index.Columns(Team{}.OrganizationID, Team{}.ID),
+			index.ForeignKeyDeleteNoAction,
+		),
+		    //=> FOREIGN KEY (`organization_id`, `team_id`) REFERENCES `team`(`organization_id`, `id`) ON DELETE NO ACTION
 		methods.Complex(s.Age, s.Name),         //=> CREATE INDEX person_age_name (`age`, `name`);
 	}
 }
 ```
+
+When foreign keys are written inside `CREATE TABLE`, tables are emitted parent-first so each referenced table is created before the tables that reference it. Foreign keys that form a cycle cannot be ordered this way; use `-outerforeignkey` for them.
 
 ### CLI Options
 
