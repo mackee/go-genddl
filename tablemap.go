@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"go/types"
 	"io"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -312,7 +313,7 @@ OUTER:
 				}
 			}
 			if selField == nil {
-				continue OUTER
+				log.Fatalf("[ERROR] index column %s.%s is not a field declared on its own line in the struct", structName, fieldName)
 			}
 			column := unresolvedIndexColumn{
 				StructName: structName,
