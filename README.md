@@ -66,6 +66,12 @@ func (s Person) _schemaIndex(methods index.Methods) []index.Definition {
 		methods.Unique(s.UserCode, s.Type),     //=> UNIQUE (`usercode`, `type`),
 		methods.ForeignKey(s.TeamID, Team{}.ID, index.ForeignKeyDeleteCascade, index.ForeignKeyUpdateSetDefault),
 		    //=> FOREGIN KEY (`team_id`) REFERENCES team(`id`) ON DELETE CASCADE ON UPDATE SET DEFAULT
+		methods.ForeignKey(
+			index.Columns(s.OrganizationID, s.TeamID),
+			index.Columns(Team{}.OrganizationID, Team{}.ID),
+			index.ForeignKeyDeleteNoAction,
+		),
+		    //=> FOREIGN KEY (`organization_id`, `team_id`) REFERENCES `team`(`organization_id`, `id`) ON DELETE NO ACTION
 		methods.Complex(s.Age, s.Name),         //=> CREATE INDEX person_age_name (`age`, `name`);
 	}
 }

@@ -111,3 +111,34 @@ type Statement struct {
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
+
+//genddl:table item
+type Item struct {
+	ID     int64  `db:"id,primarykey,autoincrement"`
+	ShopID int64  `db:"shop_id"`
+	Name   string `db:"name"`
+}
+
+func (t Item) _schemaIndex(methods index.Methods) []index.Definition {
+	return []index.Definition{
+		methods.Unique(t.ShopID, t.ID),
+	}
+}
+
+//genddl:table item_review
+type ItemReview struct {
+	ID         int64     `db:"id,primarykey,autoincrement"`
+	ShopID     int64     `db:"shop_id"`
+	ItemID     int64     `db:"item_id"`
+	ReviewedAt time.Time `db:"reviewed_at"`
+}
+
+func (s ItemReview) _schemaIndex(methods index.Methods) []index.Definition {
+	return []index.Definition{
+		methods.ForeignKey(
+			index.Columns(s.ShopID, s.ItemID),
+			index.Columns(Item{}.ShopID, Item{}.ID),
+			index.ForeignKeyDeleteNoAction,
+		),
+	}
+}

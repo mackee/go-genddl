@@ -29,3 +29,9 @@ type Methods interface {
 }
 
 type Definition string
+
+// Columns groups columns for a composite foreign key:
+// methods.ForeignKey(index.Columns(s.A, s.B), index.Columns(Parent{}.A, Parent{}.B)).
+func Columns(columns ...interface{}) []interface{} {
+	return columns
+}
