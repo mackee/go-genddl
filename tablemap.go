@@ -349,6 +349,20 @@ func retrieveIndexForeignKeyOptionByExpr(exprs []ast.Expr) []index.ForeignKeyOpt
 	return options
 }
 
+func (tm *TableMap) inlineForeignKeyReferences() []string {
+	var refs []string
+	for _, idx := range tm.Indexes {
+		si, ok := idx.(indexIdent)
+		if !ok || si.Type != indexForeign || si.OuterForeignKey {
+			continue
+		}
+		if ref, ok := tm.Tables[si.References[0].TableStruct()]; ok {
+			refs = append(refs, ref)
+		}
+	}
+	return refs
+}
+
 func (tm *TableMap) WriteDDL(w io.Writer, dialect Dialect, opts *tableMapOption) error {
 	tableName := dialect.QuoteField(strings.TrimSpace(tm.Name))
 

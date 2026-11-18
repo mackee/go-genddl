@@ -77,6 +77,8 @@ func (s Person) _schemaIndex(methods index.Methods) []index.Definition {
 }
 ```
 
+When foreign keys are written inside `CREATE TABLE`, tables are emitted parent-first so each referenced table is created before the tables that reference it. Foreign keys that form a cycle cannot be ordered this way; use `-outerforeignkey` for them.
+
 ### CLI Options
 
 ```
